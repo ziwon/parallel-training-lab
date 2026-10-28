@@ -66,9 +66,11 @@ npm run test:e2e
 
 ### Deploy to Cloudflare Pages
 
-The [live application](https://parallel-training-lab.pages.dev/) deploys automatically when commits are pushed to `main`. Other branches receive Pages preview deployments.
+The [live application](https://parallel-training-lab.pages.dev/) deploys automatically when commits are pushed to `main` and [GitHub Actions](.github/workflows/check.yml) passes. Pull requests run the same checks without triggering production deployment. The workflow can also be run manually from the Actions tab.
 
-[GitHub Actions](.github/workflows/check.yml) runs type checking, unit tests, a production build, and Chromium end-to-end tests on pushes to `main` and pull requests, using Node.js 24. Cloudflare Pages independently runs `npm run check` and publishes only if that command succeeds; it does not wait for the GitHub Actions browser tests. The Pages Git integration requires no Cloudflare API token in GitHub Actions.
+The workflow uses Node.js 24 for type checking, unit tests, a production build, and Chromium end-to-end tests. Its dependent deploy job calls a Cloudflare Pages deploy hook for `main`. Cloudflare then fetches the branch, runs `npm run check`, and publishes only if its build succeeds. A successful deploy job confirms that Cloudflare accepted the build request; the Pages dashboard shows the final deployment status.
+
+The hook URL is stored in the repository's `CLOUDFLARE_DEPLOY_HOOK` Actions secret, never in source. Native Pages production push deployments are disabled so production builds start through the tested workflow. This avoids relying on the Git integration's push event delivery, which did not trigger a build during setup.
 
 To deploy your own copy, connect a separate Pages project to your repository with these settings:
 
@@ -79,7 +81,7 @@ To deploy your own copy, connect a separate Pages project to your repository wit
 | Production branch    | `main`            |
 | Environment variable | `NODE_VERSION=24` |
 
-Review branch previews before merging to `main`. The checked-in `wrangler.jsonc` records the Pages project name and output directory; change the name for your own project. Any static host can serve the build; there are no server routes or runtime secrets. See Cloudflare’s [React deployment guide](https://developers.cloudflare.com/pages/framework-guides/deploy-a-react-site/).
+For this workflow, create a Pages deploy hook for `main`, save its URL as the `CLOUDFLARE_DEPLOY_HOOK` repository secret, and disable native automatic production branch deployments in Pages to avoid duplicate builds. The checked-in `wrangler.jsonc` records the Pages project name and output directory; change the name for your own project. Any static host can serve the build; there are no server routes or runtime secrets. See Cloudflare’s [React deployment guide](https://developers.cloudflare.com/pages/framework-guides/deploy-a-react-site/).
 
 For a manual production deployment, authenticate Wrangler with the project’s Cloudflare account, then run:
 
@@ -88,7 +90,7 @@ npm run build
 npx wrangler@4 pages deploy dist --project-name parallel-training-lab --branch main
 ```
 
-Use your own project name when deploying a fork. If a push does not start a build, check the Cloudflare GitHub App’s repository access and Pages deployment settings, or trigger a deployment from the dashboard.
+Use your own project name when deploying a fork. If a push does not deploy, check the Actions test and deploy jobs, the deploy-hook secret, and the Pages build log. Cloudflare must retain GitHub App access to the repository to fetch the source.
 
 ## Understand the model’s limits
 
