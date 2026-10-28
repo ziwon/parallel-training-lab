@@ -2,7 +2,7 @@
 
 See what each GPU rank owns, computes, and waits for during one training step.
 
-Parallel Training Lab makes distributed training inspectable: follow parameters through forward and backward passes, watch communication unlock the next operation, and see why memory rises and falls. Explore **DDP, FSDP, TP, PP, and EP** entirely in your browser. No GPU, CUDA, model downloads, or backend required.
+Parallel Training Lab makes distributed training inspectable: follow parameters through forward and backward passes, watch communication unlock the next operation, and see why memory rises and falls. Explore **DDP, FSDP, TP, PP, and EP**, or compare **ZeRO stages 1, 2, and 3**, entirely in your browser. No GPU, CUDA, model downloads, or backend required.
 
 **[Open Parallel Training Lab](https://parallel-training-lab.pages.dev/)** · [Run locally](#run-locally) · [Model reference](docs/model.md) · [NCCL Lab](https://nccl-lab.pages.dev/)
 
@@ -30,6 +30,16 @@ Use `Space` to play or pause, `←` / `→` to step, and `R` to reset. Scrub the
 | **EP** — Expert parallel               | Complete experts in a top-1 MoE           | AllToAll dispatch and combine in both directions           |
 
 DDP, FSDP, TP, and PP share the same four-layer dense problem. EP uses a separate eight-expert model and compares against its one-rank execution. FSDP shards model state; each rank still computes complete layers on local samples. TP partitions the layer computation itself.
+
+## Compare ZeRO stages
+
+Open **ZeRO Stage Explorer** and select any two of DDP, ZeRO-1, ZeRO-2, and ZeRO-3. Both runs share the workload, seed, batch, ranks, and storage profile. The four-stage summary separates parameters, gradients, FP32 master weights, and Adam moments. The existing ownership, memory ledger, and timeline show the allocations as the step runs.
+
+Choose **FP32** for `4 + 4 + 0 + 8` bytes per parameter, or **BF16 + FP32 master** for `2 + 2 + 4 + 8`. Both start at 16 bytes per parameter before sharding. The summary includes gradients and excludes activations and temporary buffers, so it differs from initial and peak allocated memory.
+
+ZeRO-1 partitions optimizer state. ZeRO-2 also partitions synchronized gradients. Both synchronize updated parameter replicas after Adam. ZeRO-3 gathers layer parameters on demand, then releases them according to retention and prefetch settings. DDP describes replication and gradient synchronization, ZeRO describes state partitioning, and FSDP is PyTorch's fully sharded data-parallel implementation.
+
+The BF16 profile changes storage and collective payload widths. It assumes BF16 activations and keeps JavaScript arithmetic without BF16 rounding or a hardware speedup claim. See the [ZeRO model reference](docs/model.md#zero-stage-explorer) for the formulas and schedule.
 
 ## What you can explore
 
@@ -96,12 +106,12 @@ Use your own project name when deploying a fork. If a push does not deploy, chec
 
 This is an educational simulator. It does not run PyTorch or NCCL kernels, benchmark hardware, or predict production scaling.
 
-- Each experiment models **one FP32 Adam step** with two moment states. JavaScript numbers provide representative arithmetic without emulating FP32 rounding.
+- Each experiment models **one Adam step** with two moment states. JavaScript numbers provide representative arithmetic without emulating FP32 or BF16 rounding. The default storage profile is FP32.
 - Timings come from explicit dependencies, compute budgets, and latency-plus-bandwidth costs. Each rank has one compute lane; the group shares one serialized communication lane. Ranks do not represent physical GPU wiring.
-- DDP/FSDP split equal local batches; TP ranks cooperate on the same samples; PP accumulates microbatches. Comparisons preserve the global batch without rounding or dropping samples.
+- DDP, ZeRO, and FSDP split equal local batches; TP ranks cooperate on the same samples; PP accumulates microbatches. Comparisons preserve the global batch without rounding or dropping samples.
 - FSDP is layer-wise and FSDP2-inspired. Retention and prefetch have explicit buffer lifetimes, but this is not a runtime-exact allocation model.
 - PP uses **GPipe** with 1, 2, or 4 stages. Other strategies support 1, 2, 4, or 8 ranks. EP uses eight linear experts and a **fixed top-1 router**, with no dropped tokens or router training.
-- Strategies run independently. Hybrid parallel meshes, mixed precision, checkpointing, CPU offload, and real profiler import are outside this release.
+- Strategies run independently. Hybrid parallel meshes, precision rounding, checkpointing, CPU offload, and real profiler import are outside this release.
 
 Read the [model reference](docs/model.md) for the formulas, memory lifetimes, hand-checkable fixtures, and links to the official mechanisms.
 

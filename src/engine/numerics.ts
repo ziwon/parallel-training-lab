@@ -1,5 +1,10 @@
 import type { Operation, Simulation, SimulationEvent } from "./types";
 import {
+  isShardedDataParallel,
+  isZeroStrategy,
+  optimizerRange,
+} from "./state-layout";
+import {
   EXPERT_COUNT,
   expertForSample,
   expertOwner,
@@ -43,11 +48,14 @@ export interface NumericalRankSnapshot {
   sampleIds: number[];
   parameterRanges: [number, number][];
   parameterIndices: number[][];
+  optimizerIndices: number[][];
+  synchronizedGradientIndices: number[][];
   parameters: number[][];
   gradients: (number[] | null)[];
   gathered: (number[] | null)[];
   synchronizedLayers: number[];
   updatedLayers: number[];
+  parameterSynchronizedLayers: number[];
   localLoss: number | null;
 }
 export interface NumericalSnapshot {
@@ -68,6 +76,8 @@ export interface NumericalResult {
   sampleIdsByRank: number[][];
   parameterRangesByRank: [number, number][][];
   parameterIndicesByRank: number[][][];
+  optimizerIndicesByRank: number[][][];
+  synchronizedGradientIndicesByRank: number[][][];
   lossBefore: number;
   lossAfter: number;
   maxGradientError: number;
@@ -129,8 +139,8 @@ export function createFixture(
     kind,
     description:
       kind === "moe"
-        ? "Eight independent 8×8 linear experts. Fixed top-1 routing selects (sample ID × 5 + seed) modulo 8. Loss averages all source tokens and output channels. JavaScript numbers do not emulate FP32 rounding."
-        : "Four sequential 8×8 dense linear layers, with input-major matrix entries. Loss is half squared error averaged over samples and output channels. JavaScript numbers do not emulate FP32 rounding.",
+        ? "Eight independent 8×8 linear experts. Fixed top-1 routing selects (sample ID × 5 + seed) modulo 8. Loss averages all source tokens and output channels. JavaScript numbers do not emulate FP32 or BF16 rounding."
+        : "Four sequential 8×8 dense linear layers, with input-major matrix entries. Loss is half squared error averaged over samples and output channels. JavaScript numbers do not emulate FP32 or BF16 rounding.",
   };
 }
 
@@ -317,11 +327,16 @@ function snapshot(
         end,
       ]),
       parameterIndices: matrixCopy(state.parameterIndices),
+      optimizerIndices: matrixCopy(state.optimizerIndices),
+      synchronizedGradientIndices: matrixCopy(
+        state.synchronizedGradientIndices,
+      ),
       parameters: matrixCopy(state.parameters),
       gradients: optionalMatrixCopy(state.gradients),
       gathered: optionalMatrixCopy(state.gathered),
       synchronizedLayers: [...state.synchronizedLayers],
       updatedLayers: [...state.updatedLayers],
+      parameterSynchronizedLayers: [...state.parameterSynchronizedLayers],
       localLoss: state.localLoss,
     })),
   };
@@ -383,6 +398,11 @@ function sumMatrices(matrices: Matrix[]): Matrix {
 
 export function executeNumerics(run: Simulation): NumericalResult {
   const { config } = run;
+  const shardedDataParallel = isShardedDataParallel(config.strategy);
+  const shardedReplicaOptimizer =
+    config.strategy === "zero1" || config.strategy === "zero2";
+  const replicatedParameters =
+    config.strategy === "ddp" || shardedReplicaOptimizer;
   const fixture = createFixture(
     config.seed,
     config.globalBatch,
@@ -406,11 +426,23 @@ export function executeNumerics(run: Simulation): NumericalResult {
     const parameters = initialParameters.map((matrix, layer) =>
       indices[layer].map((index) => matrix[index]),
     );
+    const optimizerIndices = shardedReplicaOptimizer
+      ? initialParameters.map((matrix) => {
+          const [start, end] = optimizerRange(config, matrix.length, rank);
+          return allIndices.slice(start, end);
+        })
+      : matrixCopy(indices);
+    const synchronizedGradientIndices =
+      config.strategy === "zero2"
+        ? matrixCopy(optimizerIndices)
+        : matrixCopy(indices);
     return {
       rank,
       samples,
       sampleIds: samples.map((sample) => sample.id),
       parameterIndices: indices,
+      optimizerIndices,
+      synchronizedGradientIndices,
       parameterRanges: indices.map((owned) =>
         owned.length ? [Math.min(...owned), Math.max(...owned) + 1] : [0, 0],
       ),
@@ -419,6 +451,7 @@ export function executeNumerics(run: Simulation): NumericalResult {
       gathered: initialParameters.map(() => null),
       synchronizedLayers: [],
       updatedLayers: [],
+      parameterSynchronizedLayers: [],
       localLoss: null,
       inputs: new Map(),
       outputs: new Map(),
@@ -429,8 +462,8 @@ export function executeNumerics(run: Simulation): NumericalResult {
       returnedInputGradients: new Map(),
       localGradients: initialParameters.map(() => null),
       synchronizedGradients: initialParameters.map(() => null),
-      firstMoments: parameters.map((row) => row.map(() => 0)),
-      secondMoments: parameters.map((row) => row.map(() => 0)),
+      firstMoments: optimizerIndices.map((row) => row.map(() => 0)),
+      secondMoments: optimizerIndices.map((row) => row.map(() => 0)),
     };
   });
   const operations = new Map(
@@ -462,9 +495,9 @@ export function executeNumerics(run: Simulation): NumericalResult {
     return state.samples.slice(microbatch * size, (microbatch + 1) * size);
   };
   const computationIndices = (state: RankState, layer: number) =>
-    config.strategy === "fsdp" ? allIndices : state.parameterIndices[layer];
+    shardedDataParallel ? allIndices : state.parameterIndices[layer];
   const parametersFor = (state: RankState, layer: number) =>
-    config.strategy === "fsdp"
+    shardedDataParallel
       ? required(
           state.gathered[layer],
           `Rank ${state.rank} consumed layer ${layer} before all-gather completed.`,
@@ -497,7 +530,7 @@ export function executeNumerics(run: Simulation): NumericalResult {
       "Final forward output is missing.",
     );
     const count =
-      config.strategy === "ddp" || config.strategy === "fsdp"
+      isZeroStrategy(config.strategy) || shardedDataParallel
         ? state.samples.length
         : config.globalBatch;
     return output.map((row, sample) =>
@@ -547,10 +580,7 @@ export function executeNumerics(run: Simulation): NumericalResult {
         const state = states[rank],
           layers = new Map<number, number[]>();
         for (const layer of operation.layers) {
-          if (
-            !state.parameterIndices[layer].length &&
-            config.strategy !== "fsdp"
-          )
+          if (!state.parameterIndices[layer].length && !shardedDataParallel)
             throw new Error("Compute rank does not own the parameter group.");
           layers.set(layer, [...parametersFor(state, layer)]);
           if (operation.kind === "forward")
@@ -574,6 +604,28 @@ export function executeNumerics(run: Simulation): NumericalResult {
             states[rank].synchronizedGradients[layer],
             "Adam started before gradient synchronization or accumulation.",
           );
+    if (operation.purpose === "parameter-sync") {
+      if (operation.kind !== "all-gather" || !shardedReplicaOptimizer)
+        throw new Error(
+          "Parameter synchronization requires a ZeRO-1 or ZeRO-2 all-gather.",
+        );
+      if (
+        new Set(operation.ranks).size !== states.length ||
+        operation.ranks.length !== states.length
+      )
+        throw new Error(
+          "Parameter synchronization must include every replica rank once.",
+        );
+      for (const state of states)
+        for (const layer of operation.layers) {
+          if (!state.updatedLayers.includes(layer))
+            throw new Error(
+              "Parameter synchronization started before every owner completed Adam.",
+            );
+          if (state.parameterSynchronizedLayers.includes(layer))
+            throw new Error("A parameter layer was synchronized twice.");
+        }
+    }
     started.add(operation.id);
   }
   function finish(operation: Operation) {
@@ -584,8 +636,13 @@ export function executeNumerics(run: Simulation): NumericalResult {
         for (const layer of operation.layers) {
           const full = Array<number>(width * width).fill(0),
             owners = Array<number>(width * width).fill(0);
+          const parameterSync = operation.purpose === "parameter-sync";
           for (const state of states)
-            state.parameterIndices[layer].forEach((index, local) => {
+            (parameterSync
+              ? state.optimizerIndices[layer]
+              : state.parameterIndices[layer]
+            ).forEach((index) => {
+              const local = state.parameterIndices[layer].indexOf(index);
               full[index] = state.parameters[layer][local];
               owners[index]++;
             });
@@ -593,8 +650,12 @@ export function executeNumerics(run: Simulation): NumericalResult {
             throw new Error(
               "All-gather requires exactly one owner per parameter.",
             );
-          for (const rank of operation.ranks)
-            states[rank].gathered[layer] = [...full];
+          for (const rank of operation.ranks) {
+            if (parameterSync) {
+              states[rank].parameters[layer] = [...full];
+              states[rank].parameterSynchronizedLayers.push(layer);
+            } else states[rank].gathered[layer] = [...full];
+          }
         }
         break;
       case "forward":
@@ -631,7 +692,7 @@ export function executeNumerics(run: Simulation): NumericalResult {
               state.localLoss =
                 config.strategy === "pp" ? (state.localLoss ?? 0) + loss : loss;
             }
-            if (config.strategy === "fsdp" && config.reshardAfterForward)
+            if (shardedDataParallel && config.reshardAfterForward)
               state.gathered[layer] = null;
           }
         }
@@ -690,7 +751,7 @@ export function executeNumerics(run: Simulation): NumericalResult {
             state.inputs.delete(key(layer, operation.microbatch));
             state.outputs.delete(key(layer, operation.microbatch));
             state.derivatives.delete(key(layer, operation.microbatch));
-            if (config.strategy === "fsdp") state.gathered[layer] = null;
+            if (shardedDataParallel) state.gathered[layer] = null;
           }
         }
         break;
@@ -750,7 +811,7 @@ export function executeNumerics(run: Simulation): NumericalResult {
               syncOwnedGradient(
                 states[rank],
                 layer,
-                states[rank].parameterIndices[layer].map(
+                states[rank].synchronizedGradientIndices[layer].map(
                   (index) => average[index],
                 ),
               );
@@ -885,10 +946,23 @@ export function executeNumerics(run: Simulation): NumericalResult {
               state.synchronizedGradients[layer],
               "Synchronized gradients are missing.",
             );
-            const updates = state.parameters[layer].map((parameter, index) =>
-              adamFirstStep(parameter, gradient[index], config.learningRate),
-            );
-            state.parameters[layer] = updates.map((update) => update.parameter);
+            const updates = state.optimizerIndices[layer].map((index) => {
+              const parameterIndex =
+                state.parameterIndices[layer].indexOf(index);
+              const gradientIndex =
+                state.synchronizedGradientIndices[layer].indexOf(index);
+              if (parameterIndex < 0 || gradientIndex < 0)
+                throw new Error(
+                  "Adam requires a local parameter and synchronized gradient for every optimizer-owned index.",
+                );
+              const update = adamFirstStep(
+                state.parameters[layer][parameterIndex],
+                gradient[gradientIndex],
+                config.learningRate,
+              );
+              state.parameters[layer][parameterIndex] = update.parameter;
+              return update;
+            });
             state.firstMoments[layer] = updates.map(
               (update) => update.firstMoment,
             );
@@ -922,7 +996,7 @@ export function executeNumerics(run: Simulation): NumericalResult {
     }
   }
   for (const state of states) {
-    const owned = state.parameterIndices.flatMap((indices, layer) =>
+    const owned = state.optimizerIndices.flatMap((indices, layer) =>
       indices.length ? [layer] : [],
     );
     if (
@@ -931,6 +1005,13 @@ export function executeNumerics(run: Simulation): NumericalResult {
     )
       throw new Error(
         `Rank ${state.rank} did not update every owned group exactly once.`,
+      );
+    if (
+      shardedReplicaOptimizer &&
+      owned.some((layer) => !state.parameterSynchronizedLayers.includes(layer))
+    )
+      throw new Error(
+        "Updated parameter replicas are missing their final parameter synchronization.",
       );
     if (
       config.strategy === "ep" &&
@@ -958,7 +1039,7 @@ export function executeNumerics(run: Simulation): NumericalResult {
   const reconstructedParameters = initialParameters.map((_, layer) => {
     const output = Array<number>(width * width).fill(0),
       owners = Array<number>(width * width).fill(0);
-    for (const state of config.strategy === "ddp" ? [states[0]] : states)
+    for (const state of replicatedParameters ? [states[0]] : states)
       state.parameterIndices[layer].forEach((index, local) => {
         output[index] = state.parameters[layer][local];
         owners[index]++;
@@ -970,10 +1051,8 @@ export function executeNumerics(run: Simulation): NumericalResult {
     return output;
   });
   const reference = referenceStep(fixture, config.learningRate);
-  const expectedOwned = (matrix: Matrix, state: RankState) =>
-    matrix.map((row, layer) =>
-      state.parameterIndices[layer].map((index) => row[index]),
-    );
+  const expectedOwned = (matrix: Matrix, indices: number[][]) =>
+    matrix.map((row, layer) => indices[layer].map((index) => row[index]));
   const routes =
     config.strategy === "ep"
       ? fixture.samples.map((sample) => expertForSample(sample.id, config.seed))
@@ -999,13 +1078,19 @@ export function executeNumerics(run: Simulation): NumericalResult {
     parameterIndicesByRank: states.map((state) =>
       matrixCopy(state.parameterIndices),
     ),
+    optimizerIndicesByRank: states.map((state) =>
+      matrixCopy(state.optimizerIndices),
+    ),
+    synchronizedGradientIndicesByRank: states.map((state) =>
+      matrixCopy(state.synchronizedGradientIndices),
+    ),
     lossBefore: losses.reduce((sum, loss) => sum + loss, 0) / losses.length,
     lossAfter: lossFor(reconstructedParameters, fixture.samples, routes),
     maxGradientError: Math.max(
       ...states.map((state, rank) =>
         maximumDifference(
           synchronizedGradients[rank],
-          expectedOwned(reference.gradients, state),
+          expectedOwned(reference.gradients, state.synchronizedGradientIndices),
         ),
       ),
     ),
@@ -1013,18 +1098,17 @@ export function executeNumerics(run: Simulation): NumericalResult {
       ...states.map((state, rank) =>
         maximumDifference(
           parametersByRank[rank],
-          expectedOwned(reference.parameters, state),
+          expectedOwned(reference.parameters, state.parameterIndices),
         ),
       ),
     ),
-    maxReplicaError:
-      config.strategy === "ddp"
-        ? Math.max(
-            ...parametersByRank.map((parameters) =>
-              maximumDifference(parameters, parametersByRank[0]),
-            ),
-          )
-        : 0,
+    maxReplicaError: replicatedParameters
+      ? Math.max(
+          ...parametersByRank.map((parameters) =>
+            maximumDifference(parameters, parametersByRank[0]),
+          ),
+        )
+      : 0,
     tolerance: numericalTolerance,
     history,
   };

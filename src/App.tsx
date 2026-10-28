@@ -39,11 +39,17 @@ import {
   encodeSession,
   importExport,
 } from "./engine/serialization";
-import { scenarioIds, scenarioPair } from "./engine/scenarios";
-import type { Config, ScenarioId, SessionConfig } from "./engine/types";
+import { scenarioIds, resolveSessionRuns } from "./engine/scenarios";
+import type {
+  Config,
+  ScenarioId,
+  SessionConfig,
+  ZeroStrategy,
+} from "./engine/types";
 import { SimulationView, type Focus } from "./components/SimulationView";
 import { strategies, batchDescription } from "./engine/workload";
 import { StrategyOverview } from "./components/StrategyOverview";
+import { ZeroExplorer } from "./components/ZeroExplorer";
 import { ms } from "./format";
 import { text as t } from "./text";
 
@@ -157,13 +163,8 @@ export default function App() {
   const [navigation, setNavigation] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const upload = useRef<HTMLInputElement>(null);
-  const configs = useMemo(
-    () =>
-      session.compare
-        ? scenarioPair(session.config, session.scenario)
-        : [session.config],
-    [session],
-  );
+  const isZero = session.scenario === "zero";
+  const configs = useMemo(() => resolveSessionRuns(session), [session]);
   const runs = useMemo(() => configs.map(simulate), [configs]);
   const numerical = useMemo(() => runs.map(executeNumerics), [runs]);
   const maxTime = Math.max(...runs.map((run) => run.duration));
@@ -181,8 +182,7 @@ export default function App() {
   const updateSession = (next: SessionConfig) => {
     try {
       const validated = { ...next, config: parseConfig(next.config) };
-      if (validated.compare)
-        scenarioPair(validated.config, validated.scenario).forEach(parseConfig);
+      resolveSessionRuns(validated).forEach(parseConfig);
       setSession(validated);
       reset();
       setFocuses([{ ...initialFocus }, { ...initialFocus }]);
@@ -257,7 +257,7 @@ export default function App() {
         event.metaKey ||
         (event.target instanceof HTMLElement &&
           event.target.closest(
-            'input,select,textarea,button,a,[contenteditable="true"]',
+            'input,select,textarea,button,a,[contenteditable="true"],[role="region"][tabindex]',
           ))
       )
         return;
@@ -330,8 +330,33 @@ export default function App() {
     }
     if (upload.current) upload.current.value = "";
   };
+  const standardSession = (
+    compare: boolean,
+    scenario: ScenarioId = session.scenario === "zero"
+      ? "strategies"
+      : session.scenario,
+    strategy: Config["strategy"] = strategies.includes(
+      session.config.strategy as (typeof strategies)[number],
+    )
+      ? session.config.strategy
+      : "ddp",
+  ): SessionConfig => ({
+    config: { ...session.config, strategy, precision: "fp32" },
+    compare,
+    scenario,
+  });
   const chooseScenario = (scenario: ScenarioId) =>
-    updateSession({ ...session, compare: true, scenario });
+    updateSession(standardSession(true, scenario));
+  const chooseZero = () => {
+    updateSession({
+      config: { ...session.config, strategy: "ddp" },
+      compare: true,
+      scenario: "zero",
+      zeroPair:
+        session.scenario === "zero" ? session.zeroPair : ["ddp", "zero3"],
+    });
+    setNavigation(false);
+  };
   return (
     <div className="app-shell">
       <a className="skip-link" href="#main">
@@ -373,7 +398,7 @@ export default function App() {
           <button
             className={!session.compare ? "active" : ""}
             onClick={() => {
-              updateSession({ ...session, compare: false });
+              updateSession(standardSession(false));
               setNavigation(false);
             }}
           >
@@ -381,14 +406,18 @@ export default function App() {
             {t.simulator}
           </button>
           <button
-            className={session.compare ? "active" : ""}
+            className={session.compare && !isZero ? "active" : ""}
             onClick={() => {
-              updateSession({ ...session, compare: true });
+              updateSession(standardSession(true));
               setNavigation(false);
             }}
           >
             <ArrowLeftRight size={17} />
             {t.compare}
+          </button>
+          <button className={isZero ? "active" : ""} onClick={chooseZero}>
+            <Layers3 size={17} />
+            {t.zeroTitle}
           </button>
           <button
             onClick={() => {
@@ -411,11 +440,7 @@ export default function App() {
                   : ""
               }
               onClick={() => {
-                updateSession({
-                  ...session,
-                  compare: false,
-                  config: { ...session.config, strategy },
-                });
+                updateSession(standardSession(false, "strategies", strategy));
                 setNavigation(false);
               }}
             >
@@ -438,7 +463,11 @@ export default function App() {
               </span>
             ))}
           </div>
-          <p>{t.strategyExplain[session.config.strategy]}</p>
+          <p>
+            {isZero
+              ? t.zeroIdentity
+              : t.strategyExplain[session.config.strategy]}
+          </p>
           <button onClick={() => setGuide(true)}>
             {t.guide}
             <ArrowLeftRight size={12} />
@@ -473,7 +502,9 @@ export default function App() {
             </button>
             <span>{t.workspace}</span>
             <ChevronRight size={13} />
-            <strong>{session.compare ? t.compare : t.simulator}</strong>
+            <strong>
+              {isZero ? t.zeroTitle : session.compare ? t.compare : t.simulator}
+            </strong>
           </div>
           <span className="educational">
             <span className="status-dot" />
@@ -483,8 +514,8 @@ export default function App() {
         <main id="main">
           <div className="page-heading">
             <div>
-              <h1>{t.title}</h1>
-              <p>{t.subtitle}</p>
+              <h1>{isZero ? t.zeroTitle : t.title}</h1>
+              <p>{isZero ? t.zeroSubtitle : t.subtitle}</p>
             </div>
             <div className="file-actions">
               <button
@@ -529,78 +560,98 @@ export default function App() {
               </button>
             </div>
           )}
-          <section className="scenario-section" aria-label={t.scenarioTitle}>
-            <div className="scenario-heading-row">
-              <h2 className="scenario-heading">{t.scenarioTitle}</h2>
-              <label className="scenario-picker">
-                <span>{t.allComparisons}</span>
-                <select
-                  aria-label={t.allComparisons}
-                  value={session.compare ? session.scenario : ""}
-                  onChange={(event) =>
-                    chooseScenario(event.target.value as ScenarioId)
-                  }
-                >
-                  <option value="" disabled>
-                    {t.chooseComparison}
-                  </option>
-                  {scenarioIds.map((id) => (
-                    <option key={id} value={id}>
-                      {t.scenarios[id].title}
+          {!isZero && (
+            <section className="scenario-section" aria-label={t.scenarioTitle}>
+              <div className="scenario-heading-row">
+                <h2 className="scenario-heading">{t.scenarioTitle}</h2>
+                <label className="scenario-picker">
+                  <span>{t.allComparisons}</span>
+                  <select
+                    aria-label={t.allComparisons}
+                    value={session.compare ? session.scenario : ""}
+                    onChange={(event) =>
+                      chooseScenario(event.target.value as ScenarioId)
+                    }
+                  >
+                    <option value="" disabled>
+                      {t.chooseComparison}
                     </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            <div className="scenario-grid">
-              {scenarioIds.map((id) => {
-                const Icon = scenarioIcons[id];
-                return (
-                  <button
-                    key={id}
-                    className={`scenario-button ${session.compare && session.scenario === id ? "selected" : ""}`}
-                    onClick={() => chooseScenario(id)}
-                    aria-pressed={session.compare && session.scenario === id}
-                  >
-                    <Icon size={19} />
-                    <div>
-                      <strong>{t.scenarios[id].title}</strong>
-                      <span>{t.scenarios[id].detail}</span>
-                    </div>
-                    <ChevronRight size={15} />
-                  </button>
-                );
-              })}
-            </div>
-          </section>
-          <section className="configuration-strip" aria-label={t.configure}>
-            <Field label={t.strategy}>
-              <div className="strategy-toggle">
-                {strategies.map((strategy) => (
-                  <button
-                    key={strategy}
-                    aria-label={t.strategies[strategy]}
-                    aria-pressed={
-                      !session.compare && session.config.strategy === strategy
-                    }
-                    className={
-                      !session.compare && session.config.strategy === strategy
-                        ? "selected"
-                        : ""
-                    }
-                    onClick={() =>
-                      updateSession({
-                        ...session,
-                        compare: false,
-                        config: { ...session.config, strategy },
-                      })
-                    }
-                  >
-                    {t.strategies[strategy]}
-                  </button>
-                ))}
+                    {scenarioIds.map((id) => (
+                      <option key={id} value={id}>
+                        {t.scenarios[id].title}
+                      </option>
+                    ))}
+                  </select>
+                </label>
               </div>
-            </Field>
+              <div className="scenario-grid">
+                {scenarioIds.map((id) => {
+                  const Icon = scenarioIcons[id];
+                  return (
+                    <button
+                      key={id}
+                      className={`scenario-button ${session.compare && session.scenario === id ? "selected" : ""}`}
+                      onClick={() => chooseScenario(id)}
+                      aria-pressed={session.compare && session.scenario === id}
+                    >
+                      <Icon size={19} />
+                      <div>
+                        <strong>{t.scenarios[id].title}</strong>
+                        <span>{t.scenarios[id].detail}</span>
+                      </div>
+                      <ChevronRight size={15} />
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+          {session.scenario === "zero" && (
+            <ZeroExplorer
+              config={session.config}
+              pair={session.zeroPair}
+              onPairChange={(zeroPair) =>
+                updateSession({ ...session, zeroPair })
+              }
+              onPrecisionChange={(precision) =>
+                updateSession({
+                  ...session,
+                  config: { ...session.config, precision },
+                })
+              }
+            />
+          )}
+          <section
+            className={`configuration-strip ${isZero ? "zero-configuration" : ""}`}
+            aria-label={t.configure}
+          >
+            {!isZero && (
+              <Field label={t.strategy}>
+                <div className="strategy-toggle">
+                  {strategies.map((strategy) => (
+                    <button
+                      key={strategy}
+                      aria-label={t.strategies[strategy]}
+                      aria-pressed={
+                        !session.compare && session.config.strategy === strategy
+                      }
+                      className={
+                        !session.compare && session.config.strategy === strategy
+                          ? "selected"
+                          : ""
+                      }
+                      onClick={() =>
+                        updateSession(
+                          standardSession(false, "strategies", strategy),
+                        )
+                      }
+                    >
+                      {t.strategies[strategy]}
+                    </button>
+                  ))}
+                </div>
+              </Field>
+            )}
             <Field label={t.ranks}>
               <select
                 value={session.config.ranks}
@@ -661,7 +712,7 @@ export default function App() {
               </span>
               <strong>{batchDescription(configs[0])}</strong>
               <small>
-                {t.precision} ·{" "}
+                {t.precisionProfiles[session.config.precision]} ·{" "}
                 {configs[0].strategy === "pp"
                   ? "GPipe"
                   : configs[0].strategy === "ep"
@@ -683,7 +734,7 @@ export default function App() {
               onConfigure={() => setSettings(true)}
             />
           )}
-          {session.compare && (
+          {session.compare && session.scenario !== "zero" && (
             <div className="comparison-note">
               <ArrowLeftRight size={18} />
               <div>
@@ -707,7 +758,7 @@ export default function App() {
               <button
                 className="icon-button"
                 aria-label={t.close}
-                onClick={() => updateSession({ ...session, compare: false })}
+                onClick={() => updateSession(standardSession(false))}
               >
                 <X size={16} />
               </button>
@@ -823,6 +874,7 @@ export default function App() {
                 onBoundary={(eventIndex) => boundary(index, eventIndex)}
                 label={index === 0 ? t.runA : t.runB}
                 compact={session.compare}
+                zeroMode={isZero}
               />
             ))}
           </div>
@@ -841,6 +893,7 @@ export default function App() {
       {settings && (
         <Settings
           config={session.config}
+          zeroPair={session.scenario === "zero" ? session.zeroPair : undefined}
           onClose={() => setSettings(false)}
           onApply={(config) => {
             updateSession({ ...session, config });
@@ -900,10 +953,12 @@ export default function App() {
 
 function Settings({
   config,
+  zeroPair,
   onApply,
   onClose,
 }: {
   config: Config;
+  zeroPair?: [ZeroStrategy, ZeroStrategy];
   onApply: (config: Config) => void;
   onClose: () => void;
 }) {
@@ -959,9 +1014,17 @@ function Settings({
           {numeric("seed", t.seed, 0, 4294967295)}
           {numeric("learningRate", t.learningRate, 0.000001, 1, "any")}
         </div>
-        {draft.strategy === "ddp" && (
+        {(zeroPair
+          ? zeroPair.some((strategy) =>
+              ["ddp", "zero1", "zero2"].includes(strategy),
+            )
+          : draft.strategy === "ddp") && (
           <fieldset>
-            <legend>{t.ddpOnly}</legend>
+            <legend>
+              {zeroPair
+                ? "DDP / ZeRO-1 / ZeRO-2 gradient reduction"
+                : t.ddpOnly}
+            </legend>
             <div className="settings-grid">
               <Field label={t.bucketLayers}>
                 <select
@@ -995,9 +1058,11 @@ function Settings({
             </div>
           </fieldset>
         )}
-        {draft.strategy === "fsdp" && (
+        {(zeroPair?.includes("zero3") || draft.strategy === "fsdp") && (
           <fieldset>
-            <legend>{t.fsdpOnly}</legend>
+            <legend>
+              {zeroPair ? "ZeRO-3 parameter gathering" : t.fsdpOnly}
+            </legend>
             <div className="settings-grid">
               <label className="checkbox-field">
                 <input

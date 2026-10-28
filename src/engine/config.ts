@@ -2,6 +2,7 @@ import type { Config } from "./types";
 
 export const defaultConfig: Config = {
   strategy: "ddp",
+  precision: "fp32",
   ranks: 4,
   globalBatch: 32,
   microbatches: 4,
@@ -28,8 +29,21 @@ export function parseConfig(input: unknown): Config {
     if (!Object.hasOwn(defaultConfig, key))
       throw new Error(`Unknown configuration field: ${key}.`);
   const value = { ...defaultConfig, ...data };
-  if (!["ddp", "fsdp", "tp", "pp", "ep"].includes(value.strategy))
-    throw new Error("Strategy must be ddp, fsdp, tp, pp, or ep.");
+  if (
+    !["ddp", "fsdp", "tp", "pp", "ep", "zero1", "zero2", "zero3"].includes(
+      value.strategy,
+    )
+  )
+    throw new Error("Unknown training strategy.");
+  if (!["fp32", "bf16-master"].includes(value.precision))
+    throw new Error("Unknown precision profile.");
+  if (
+    value.precision !== "fp32" &&
+    !["ddp", "zero1", "zero2", "zero3"].includes(value.strategy)
+  )
+    throw new Error(
+      "BF16 with FP32 master weights is supported only in the ZeRO stage comparison.",
+    );
   if (![1, 2, 4, 8].includes(value.ranks))
     throw new Error("Ranks must be 1, 2, 4, or 8.");
   const integer = (key: keyof Config, low: number, high: number) => {
@@ -44,7 +58,7 @@ export function parseConfig(input: unknown): Config {
   };
   integer("globalBatch", 1, 128);
   if (
-    ["ddp", "fsdp", "ep"].includes(value.strategy) &&
+    ["ddp", "fsdp", "ep", "zero1", "zero2", "zero3"].includes(value.strategy) &&
     value.globalBatch % value.ranks !== 0
   )
     throw new Error(

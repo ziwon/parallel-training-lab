@@ -2,7 +2,7 @@
 
 [Back to the README](../README.md)
 
-This reference describes simulator version 2.0.0. It is an educational execution model, not a PyTorch trace or a prediction of production scaling.
+This reference describes simulator version 3.0.0. It is an educational execution model, not a PyTorch trace or a prediction of production scaling.
 
 ## Fixed training problem
 
@@ -13,9 +13,9 @@ globalBatch = localMicrobatch × dataParallelRanks × accumulationSteps
 accumulationSteps = 1
 ```
 
-Supported rank counts are 1, 2, 4, and 8, except PP, which supports 1, 2, or 4 nonempty stages for the four-layer model. Global batch is an integer from 1 to 128. DDP/FSDP and EP source batches must divide evenly across ranks. PP uses 1, 2, 4, or 8 microbatches, and the global batch must divide evenly by that count. TP has one data replica: all tensor ranks cooperate on the same global samples. No configuration silently rounds, drops, or adds samples.
+Supported rank counts are 1, 2, 4, and 8, except PP, which supports 1, 2, or 4 nonempty stages for the four-layer model. Global batch is an integer from 1 to 128. DDP, ZeRO, FSDP, and EP source batches must divide evenly across ranks. PP uses 1, 2, 4, or 8 microbatches, and the global batch must divide evenly by that count. TP has one data replica: all tensor ranks cooperate on the same global samples. No configuration silently rounds, drops, or adds samples.
 
-DDP/FSDP split sample IDs into equal contiguous batches and average their local mean gradients. PP accumulates contributions normalized by the global batch, so `globalBatch = microbatchSize × microbatches × 1 data replica`. EP initially partitions source tokens, then sends each token to one expert. Its loss uses the global token count, not the number routed to an individual expert. Every comparison preserves model workload, seed, optimizer, learning rate, global batch, and model scale. Dense and MoE runs are different learning problems and are never presented as a fixed-problem speedup comparison.
+DDP, ZeRO, and FSDP split sample IDs into equal contiguous batches and average their local mean gradients. PP accumulates contributions normalized by the global batch, so `globalBatch = microbatchSize × microbatches × 1 data replica`. EP initially partitions source tokens, then sends each token to one expert. Its loss uses the global token count, not the number routed to an individual expert. Every comparison preserves model workload, seed, optimizer, learning rate, global batch, and model scale. Dense and MoE runs are different learning problems and are never presented as a fixed-problem speedup comparison.
 
 ## Virtual layers and representative arithmetic
 
@@ -23,12 +23,12 @@ The virtual sequential model has four dense linear layers without biases. Its wi
 
 ```text
 layerElements = inputWidth × outputWidth × modelScale
-savedInputBytes = localMicrobatch × inputWidth × 128 × modelScale × 4
+savedInputBytes = localMicrobatch × inputWidth × 128 × modelScale × activationBytes
 ```
 
-The 128 positions per sample are a fixed virtual activation extent. At scale one the parameter groups contain 2,097,152, 8,388,608, 8,388,608, and 2,097,152 elements. Every group must contain a whole number of elements per rank. FSDP shards are contiguous half-open ranges, with exactly one owner for each element; TP column slices instead use explicit matrix coordinates. Each TP parameter and optimizer allocation exports a `matrixSlice` with axis, half-open coordinate bounds, matrix dimensions, and virtual copy count; its `range` is only the local storage extent, not a contiguous range of global matrix entries. The simulator rejects incompatible groups instead of padding them.
+The 128 positions per sample are a fixed virtual activation extent. `activationBytes` is four in FP32 mode and two in the BF16 storage profile. At scale one the parameter groups contain 2,097,152, 8,388,608, 8,388,608, and 2,097,152 elements. Every group must contain a whole number of elements per rank. FSDP shards are contiguous half-open ranges, with exactly one owner for each element; TP column slices instead use explicit matrix coordinates. Each TP parameter and optimizer allocation exports a `matrixSlice` with axis, half-open coordinate bounds, matrix dimensions, and virtual copy count; its `range` is only the local storage extent, not a contiguous range of global matrix entries. The simulator rejects incompatible groups instead of padding them.
 
-The browser computes a separate representative model with four dense 8×8 linear matrices, stored in input-major order. With row-vector notation, each layer evaluates `h[l+1] = h[l] W[l]`. This fixture has 256 actual weights regardless of virtual model scale, and its off-diagonal entries make matrix partitions observable. DDP, FSDP, TP, and PP use exactly the same dense fixture and initial data.
+The browser computes a separate representative model with four dense 8×8 linear matrices, stored in input-major order. With row-vector notation, each layer evaluates `h[l+1] = h[l] W[l]`. This fixture has 256 actual weights regardless of virtual model scale, and its off-diagonal entries make matrix partitions observable. DDP, ZeRO, FSDP, TP, and PP use exactly the same dense fixture and initial data.
 
 EP instead uses eight independent 8×8 linear experts, for 512 representative weights. Its virtual experts are each 1024×1024, with model scale and 128 virtual positions applied as above. Each sample is one representative token. The fixed top-1 router selects `expert = (sampleId × 5 + seed) % 8`; contiguous expert ranges are owned by ranks. There is no learned router, top-k duplication, capacity dropping, padding, or load-balancing loss.
 
@@ -36,7 +36,7 @@ Loss is the sum of squared prediction errors divided by twice the number of glob
 
 A scalar check uses `x=2`, `w=3`, target `1`: prediction `6`, half squared error `12.5`, and gradient `10`. A matrix check uses `X=[1,2]`, `Wc=[[1,2],[3,4]]`, `Wr=identity`, and target `[1,0]`: output `[7,10]`, loss `34`, output derivative `[3,5]`, `dWc=[[3,5],[6,10]]`, and `dWr=[[21,35],[30,50]]`. These calculations expose missing TP sums or incorrect batch normalization.
 
-JavaScript numbers perform the arithmetic. FP32 labels describe four-byte storage in the virtual ledger. The application does not emulate FP32, FP16, or BF16 rounding.
+JavaScript numbers perform the arithmetic. The FP32 profile uses four-byte parameters, gradients, and activations. The BF16 profile uses two-byte parameters, gradients, and activations, plus separate four-byte FP32 master weights. Both use two four-byte Adam moments. These labels describe virtual storage and communication payloads. The application does not emulate precision rounding, low-precision accumulation, or Tensor Core throughput.
 
 ## DDP
 
@@ -45,6 +45,31 @@ Each rank owns complete parameter and Adam-moment replicas. Local backward trave
 With overlap disabled, bucket communication also waits for the full backward pass. Adam waits for all local backward work and all gradient reductions. Replicas begin with equal weights and use equal synchronized gradients.
 
 These mechanisms follow the [PyTorch DDP design note](https://docs.pytorch.org/docs/stable/notes/ddp.html). The simulator does not model DDP construction-time broadcast, dynamic bucket rebuilding, unused parameters, or autograd hooks.
+
+## ZeRO Stage Explorer
+
+The Explorer compares any two of DDP, ZeRO-1, ZeRO-2, and ZeRO-3 with the same dense workload and storage profile. The original strategy views retain FP32 storage. The stage definitions follow the [DeepSpeed ZeRO overview](https://www.deepspeed.ai/tutorials/zero/). The schedules below are explicit educational choices, not exact DeepSpeed traces.
+
+ZeRO-1 keeps full parameter and gradient replicas. AllReduce averages each bucket's full gradients. Each rank updates only its optimizer-owned indices, including its FP32 master shard when enabled. A subsequent per-layer AllGather writes those updated values into every persistent parameter replica. This gather creates no temporary parameter allocation.
+
+ZeRO-2 also partitions synchronized gradients. Local backward still allocates a full gradient input. ReduceScatter averages inputs and produces the optimizer owner's gradient shard. The full input and shard output coexist until ReduceScatter completes. Owner updates and parameter synchronization then follow the ZeRO-1 schedule.
+
+ZeRO-3 partitions parameters, synchronized gradients, and optimizer state. Its teaching schedule shares the FSDP layer gather, release, retention, and bounded prefetch implementation below. ZeRO is a state-partitioning approach. FSDP is PyTorch's fully sharded data-parallel implementation. Sharing a teaching lifecycle does not make their runtime policies identical.
+
+For `P` model parameters and `N` ranks, the theoretical model-state footprint includes gradients:
+
+| Stage  | FP32 bytes per rank | BF16 with FP32 master bytes per rank |
+| ------ | ------------------- | ------------------------------------ |
+| DDP    | `16P`               | `16P`                                |
+| ZeRO-1 | `8P + 8P/N`         | `4P + 12P/N`                         |
+| ZeRO-2 | `4P + 12P/N`        | `2P + 14P/N`                         |
+| ZeRO-3 | `16P/N`             | `16P/N`                              |
+
+The FP32 profile has no separate master copy. Its 16 bytes comprise four parameter bytes, four gradient bytes, and eight moment bytes. The BF16 profile uses two parameter bytes, two gradient bytes, four master bytes, and eight moment bytes. Master weights partition with optimizer state, starting at ZeRO-1.
+
+At four ranks and scale one, FP32 totals are 320, 200, 140, and 80 MiB. BF16 with FP32 master totals are 320, 140, 110, and 80 MiB. This summary excludes activations and temporary buffers. Initialization and final snapshots contain no gradients, while dynamic peaks include full local gradients, reduced outputs, and gathered parameters when they coexist. The theoretical footprint is neither initial nor peak memory.
+
+FP32 master values use the same representative JavaScript numbers as the owned updated parameters. Their separate allocation remains explicit. The mixed profile models storage and traffic only. It does not reproduce BF16 numerical error, conversion buffers, or real GPU performance.
 
 ## FSDP
 
@@ -95,22 +120,22 @@ The routing mechanism is grounded in [Megatron Core's MoE dispatcher documentati
 
 Every allocation has an ID, rank, layer, category, ownership label, byte count, and element range. Events allocate or release IDs. Current memory is the sum of distinct resident allocations. Category peaks and the total peak are maxima over event snapshots. The sum of category peaks can exceed the total peak because categories can peak at different events.
 
-| Allocation                  | Size per rank                   | Lifetime                                                   |
-| --------------------------- | ------------------------------- | ---------------------------------------------------------- |
-| DDP parameters              | `4 × layerElements`             | Entire run                                                 |
-| FSDP parameters             | `4 × layerElements / ranks`     | Entire run                                                 |
-| Adam moments                | Twice the owned parameter bytes | Entire run, initialized eagerly                            |
-| Gathered parameters         | `4 × layerElements`             | Gather start through the last forward or backward consumer |
-| DDP gradients               | `4 × layerElements`             | Backward start through Adam completion                     |
-| FSDP full gradient inputs   | `4 × layerElements`             | Backward start through ReduceScatter completion            |
-| FSDP output gradient shards | `4 × layerElements / ranks`     | ReduceScatter start through Adam completion                |
-| Saved activations           | `savedInputBytes` above         | Forward start through the matching backward completion     |
+| Allocation                  | Size per rank                  | Lifetime                                                   |
+| --------------------------- | ------------------------------ | ---------------------------------------------------------- |
+| DDP parameters              | `4 × layerElements`            | Entire run                                                 |
+| FSDP parameters             | `4 × layerElements / ranks`    | Entire run                                                 |
+| Adam moments                | `8 × optimizer-owned elements` | Entire run, initialized eagerly                            |
+| Gathered parameters         | `4 × layerElements`            | Gather start through the last forward or backward consumer |
+| DDP gradients               | `4 × layerElements`            | Backward start through Adam completion                     |
+| FSDP full gradient inputs   | `4 × layerElements`            | Backward start through ReduceScatter completion            |
+| FSDP output gradient shards | `4 × layerElements / ranks`    | ReduceScatter start through Adam completion                |
+| Saved activations           | `savedInputBytes` above        | Forward start through the matching backward completion     |
 
 TP and PP reserve separate saved-input copies and temporary output/derivative buffers. A partial TP tensor remains resident through its SUM, and the complete result stays until its consumer finishes. PP gradient accumulation allocates once per owned layer; microbatch-specific saved inputs release after backward. EP source inputs exist at initialization; dispatch reserves receive buffers. Expert forward saves a separate input copy, and the dispatch payload releases after the final local expert consumes it. Return buffers and outgoing payloads coexist during each exchange. Bottom input derivatives release after their final modeled return because no upstream trainable consumer exists.
 
-DDP buckets alias gradient tensors and add no second allocation. FSDP uses separate gathered parameter and reduced-gradient output buffers. Full reduction inputs and output shards coexist during ReduceScatter. A destination buffer can be allocated while its contents are still unavailable. Compute waits for AllGather completion before reading it.
+DDP and ZeRO-1 buckets alias gradient tensors and add no second allocation. ZeRO-2 creates separate reduced-gradient outputs. ZeRO-3 and FSDP use separate gathered parameter and reduced-gradient output buffers. Full reduction inputs and output shards coexist during ReduceScatter. A destination buffer can be allocated while its contents are still unavailable. Compute waits for AllGather completion before reading it.
 
-DDP/FSDP activations are local to a rank's samples, not sharded with FSDP model state. TP activation sizes follow the matrix layout; PP retains inputs per microbatch; EP retains routed expert inputs. Parameters, gradients, activations, and both moment states all use FP32 storage. There are no separate master weights or conversion buffers. Communication scratch is an explicit zero category. Loss outputs, targets, allocator caches, fragmentation, and kernel workspaces are excluded. DDP/FSDP transient input-gradient workspace is excluded; TP, PP, and EP communication-carrying output/input-gradient buffers are explicitly counted.
+DDP, ZeRO, and FSDP activations are local to a rank's samples, not sharded with FSDP model state. TP activation sizes follow the matrix layout; PP retains inputs per microbatch; EP retains routed expert inputs. The table above describes FP32 storage. The BF16 profile uses two-byte parameters, gradients, activations, and gathered parameters. Adam moments remain eight bytes per optimizer-owned element, and FP32 master weights add four bytes per optimizer-owned element for the entire run. FP32 has no separate master allocation. Conversion buffers are excluded. Communication scratch is an explicit zero category. Loss outputs, targets, allocator caches, fragmentation, and kernel workspaces are excluded. DDP, ZeRO, and FSDP transient input-gradient workspace is excluded; TP, PP, and EP communication-carrying output/input-gradient buffers are explicitly counted.
 
 The ledger rejects duplicate allocation, release of an absent allocation, and release while another operation still consumes the allocation. Exceeding capacity sets OOM on the responsible snapshot and every later snapshot, even after current memory falls below capacity. It never clamps bytes or frees buffers to conceal the excess. Simulation continues so the offending lifetime remains inspectable.
 
@@ -126,7 +151,7 @@ vHat = v / (1 - 0.999)
 parameterNext = parameter - learningRate × mHat / (sqrt(vHat) + 1e-8)
 ```
 
-DDP applies this update to complete replicas. FSDP applies it to each owned shard, TP to matrix coordinates, PP to stage layers, and EP to whole owned experts. Gradients are released after their optimizer consumer completes. Parameter and moment state remains resident.
+DDP applies this update to complete replicas. ZeRO applies it only to optimizer-owned coordinates, then stages 1 and 2 synchronize full parameter replicas. FSDP applies it to each owned shard, TP to matrix coordinates, PP to stage layers, and EP to whole owned experts. Gradients are released after their optimizer consumer completes. Parameter and moment state remains resident.
 
 ## Dependencies, resources, and modeled time
 
@@ -146,7 +171,7 @@ collectiveDurationMs = rounds × latencyUs / 1000
 
 A pipeline transfer uses `latencyUs / 1000 + payloadBytes / (bandwidthGBps × 1e6)`. Its logical size is the entire matched message, not a collective group size. EP builds source-to-owner token counts. For each exchange, `logicalBytes` is the maximum per-rank total outgoing payload including self-routed tokens. `transferredBytesPerRank` is the maximum across all ranks of outgoing or incoming remote payload, excluding self. Duration is `(ranks - 1) × latencyUs / 1000 + maxRemoteBytes / (bandwidthGBps × 1e6)`. This is a bounded synthetic exchange cost, not measured NCCL performance. One-rank EP has zero communication time and remote bytes.
 
-Forward costs two FLOPs per owned virtual weight per processed sample-position. Backward costs four. DDP/FSDP use full-layer weights and local samples; TP uses owned matrix elements and the entire global batch; PP uses owned layers and microbatch samples; EP uses owned experts and their actual routed-token counts. Duration in milliseconds is FLOPs divided by `computeTFLOPS × 1e9`. Adam uses a fixed modeled 100 GB/s memory budget and 28 bytes of traffic per owned parameter element. The selected synthetic slow rank multiplies its compute durations, including Adam, by the configured factor. Communication duration itself stays unchanged, though participant readiness can delay it.
+Forward costs two FLOPs per owned virtual weight per processed sample-position. Backward costs four. DDP, ZeRO, and FSDP use full-layer weights and local samples; TP uses owned matrix elements and the entire global batch; PP uses owned layers and microbatch samples; EP uses owned experts and their actual routed-token counts. Duration in milliseconds is FLOPs divided by `computeTFLOPS × 1e9`. Adam uses a fixed modeled 100 GB/s memory budget and 28 bytes of traffic per owned parameter element. The selected synthetic slow rank multiplies its compute durations, including Adam, by the configured factor. Communication duration itself stays unchanged, though participant readiness can delay it.
 
 The scheduler uses start and completion dependency edges with deterministic ordering at equal timestamps. One-rank collectives have zero duration and zero transferred bytes. The uniform FSDP ledger still materializes separate full and reduced-output buffers at one rank. This conservative storage choice avoids an undocumented special-case alias and is not a claim about a real single-device FSDP allocation.
 
@@ -158,10 +183,12 @@ The integration targets [NCCL Lab](https://nccl-lab.pages.dev/) and its [inspect
 
 `size = logicalBytes / 1,048,576` converts bytes to MiB. DDP AllReduce and FSDP ReduceScatter use `red=Average`; TP partial-result AllReduce uses `red=Sum`. AllGather and AllToAll do not reduce. An EP link uses its maximum per-rank input size as an explicitly illustrative uniform AllToAll example. NCCL Lab uses equal peer chunks, so it cannot reproduce this lab's unequal routing matrix or exact traffic. Pipeline point-to-point events have no NCCL Lab URL because its parser exposes no matched send/receive operation. Supported bandwidth presets are 16, 32, 50, and 100 GB/s. Other values are omitted and the inspector explains NCCL Lab's default 50 GB/s. Latency is not a supported query field and is not transferred. One-rank collectives have no external link because NCCL Lab accepts two or more ranks.
 
-The tools both label storage FP32, but NCCL Lab's deterministic scalar samples illustrate contribution movement. They do not reproduce this fixture's training arithmetic. Only collective configuration is sent in the link. Imported traces, data samples, and parameters are never included.
+NCCL Lab's deterministic scalar samples illustrate contribution movement; its scalar dtype does not describe this simulator's selected storage profile. They do not reproduce this fixture's training arithmetic. Only collective configuration is sent in the link. Imported traces, data samples, and parameters are never included.
 
 ## Serialization and exclusions
 
-Share links contain schema version 2 and a complete validated session with its seed. JSON exports additionally contain simulator version, model assumptions, virtual layer metadata, numerical fixture metadata and inputs, operation records, events, allocations, memory history, and final numerical results. Repeated numerical boundary snapshots are regenerated rather than duplicated in the file, keeping maximum-rank comparisons within the import size limit. Import accepts at most 10 MiB, rejects unsupported versions and invalid sessions, and regenerates the simulation from inputs. Complete version 1 DDP/FSDP links and exports migrate by adding the default microbatch field. This migration preserves configuration, but regenerates version 2 dense arithmetic; the previous diagonal fixture and archived version 1 numerical results are not replayed. Saved event and result data is archival rather than trusted replay input.
+Share links contain schema version 3 and a complete validated session with its seed. Explorer sessions also carry the chosen two-stage pair and storage profile. JSON exports include run-specific dtype assumptions, model and fixture metadata, operations, events, allocations, memory history, and final numerical results. Repeated numerical snapshots regenerate on import instead of enlarging the file.
 
-Hybrid combinations of strategies, context parallelism, arbitrary pipeline schedules, learned MoE routing, and data-parallel accumulation beyond one are outside this release. So are activation checkpointing, CPU offload, mixed precision, elastic ranks, real profiler import, physical topology, collective algorithm selection, CPU launch overhead, protocols, channels, and network contention beyond the single communication lane.
+Import accepts at most 10 MiB and regenerates the simulation from validated inputs. Complete version 1 and 2 links and exports migrate with the FP32 profile. Version 1 also receives the default microbatch count, and its earlier diagonal fixture regenerates as the current dense fixture. Legacy schemas reject new fields and strategies rather than guessing their meaning. Saved events and results are archival, not trusted replay input.
+
+Hybrid combinations of strategies, context parallelism, arbitrary pipeline schedules, learned MoE routing, and data-parallel accumulation beyond one are outside this release. So are activation checkpointing, CPU offload, precision rounding, elastic ranks, real profiler import, physical topology, collective algorithm selection, CPU launch overhead, protocols, channels, and network contention beyond the single communication lane.

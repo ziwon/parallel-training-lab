@@ -1,9 +1,15 @@
+import { optimizerRange, stateLayout } from "../state-layout";
 import { engineMessages } from "../messages";
 import type { Config, Layer } from "../types";
 import { bufferId, createPlan, end } from "./plan";
 
 export function ddpPlan(config: Config, layers: Layer[]) {
-  const { plan, ranks, allocate, operation } = createPlan(config, layers);
+  const { plan, ranks, allocate, operation, optimizerReads } = createPlan(
+    config,
+    layers,
+  );
+  const layout = stateLayout(config);
+  const partitionGradients = config.strategy === "zero2";
   const localBatch = config.globalBatch / config.ranks;
   for (const layer of layers)
     for (const rank of ranks) {
@@ -14,7 +20,10 @@ export function ddpPlan(config: Config, layers: Layer[]) {
         category: "activations",
         ownership: "local",
         label: engineMessages.allocations.savedInput,
-        bytes: localBatch * layer.activationElementsPerSample * 4,
+        bytes:
+          localBatch *
+          layer.activationElementsPerSample *
+          layout.activationBytes,
         range: [0, localBatch * layer.activationElementsPerSample],
       });
       operation(
@@ -38,7 +47,7 @@ export function ddpPlan(config: Config, layers: Layer[]) {
         category: "gradients",
         ownership: "local",
         label: engineMessages.allocations.aliasedGradient,
-        bytes: layer.elements * 4,
+        bytes: layer.elements * layout.gradientBytes,
         range: [0, layer.elements],
       });
       operation(
@@ -63,20 +72,42 @@ export function ddpPlan(config: Config, layers: Layer[]) {
     );
     if (!config.overlap)
       prerequisites.push(...ranks.map((rank) => end(bufferId("b", 0, rank))));
+    const inputs = group.flatMap((layer) =>
+      ranks.map((rank) => bufferId("g", layer, rank)),
+    );
+    const outputs = partitionGradients
+      ? group.flatMap((layer) =>
+          ranks.map((rank) =>
+            allocate({
+              id: bufferId("gs", layer, rank),
+              rank,
+              layer,
+              category: "gradients",
+              ownership: "shard",
+              label: engineMessages.allocations.gradientShard,
+              bytes:
+                (layers[layer].elements * layout.gradientBytes) / config.ranks,
+              range: optimizerRange(config, layers[layer].elements, rank),
+            }),
+          ),
+        )
+      : [];
     operation(
-      "all-reduce",
+      partitionGradients ? "reduce-scatter" : "all-reduce",
       id,
       group,
       ranks,
       prerequisites,
-      group.flatMap((layer) => ranks.map((rank) => bufferId("g", layer, rank))),
-      [],
-      [],
+      inputs,
+      outputs,
+      partitionGradients ? inputs : [],
     );
     buckets.push(id);
   }
   for (const rank of ranks) {
-    const gradients = layers.map((layer) => bufferId("g", layer.id, rank));
+    const gradients = layers.map((layer) =>
+      bufferId(partitionGradients ? "gs" : "g", layer.id, rank),
+    );
     operation(
       "adam",
       `adam:${rank}`,
@@ -84,13 +115,28 @@ export function ddpPlan(config: Config, layers: Layer[]) {
       [rank],
       buckets.map(end),
       layers.flatMap((layer) => [
-        bufferId("p", layer.id, rank),
-        bufferId("m", layer.id, rank),
-        bufferId("g", layer.id, rank),
+        ...optimizerReads(layer.id, rank),
+        bufferId(partitionGradients ? "gs" : "g", layer.id, rank),
       ]),
       [],
       gradients,
     );
   }
+  if (config.strategy === "zero1" || config.strategy === "zero2")
+    for (const layer of layers)
+      operation(
+        "all-gather",
+        `sync:${layer.id}`,
+        [layer.id],
+        ranks,
+        ranks.map((rank) => end(`adam:${rank}`)),
+        ranks.map((rank) => bufferId("p", layer.id, rank)),
+        [],
+        [],
+        {
+          purpose: "parameter-sync",
+          label: `Synchronize updated parameters L${layer.id + 1}`,
+        },
+      );
   return plan;
 }

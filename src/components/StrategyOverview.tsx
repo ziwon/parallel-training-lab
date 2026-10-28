@@ -61,7 +61,7 @@ export function StrategyOverview({
                           ? layer % 2 === 0
                             ? t.partitionLabels.cols
                             : t.partitionLabels.rows
-                          : strategy === "fsdp"
+                          : ["fsdp", "zero3"].includes(strategy)
                             ? `1/${ranks}`
                             : t.partitionLabels.full}
                       </small>

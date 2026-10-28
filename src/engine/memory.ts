@@ -12,6 +12,7 @@ const totals = (): MemoryTotals => ({
   parameters: 0,
   gradients: 0,
   optimizer: 0,
+  masterParameters: 0,
   activations: 0,
   temporary: 0,
   scratch: 0,

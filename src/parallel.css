@@ -281,3 +281,196 @@ textarea {
     width: 170px;
   }
 }
+
+.zero-explorer {
+  margin-bottom: 22px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+}
+.zero-intro {
+  max-width: 75ch;
+  color: var(--secondary);
+  margin: 0 0 18px;
+}
+.zero-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(100px, 1fr)) minmax(210px, 1.2fr);
+  gap: 14px;
+  max-width: 780px;
+}
+.zero-controls select {
+  width: 100%;
+}
+.zero-profile-breakdown {
+  color: var(--text);
+  font-size: 12px;
+  margin: 15px 0 5px;
+  font-variant-numeric: tabular-nums;
+}
+.zero-profile-note,
+.zero-summary-note {
+  max-width: 90ch;
+  font-size: 11px;
+  color: var(--muted);
+  margin: 0;
+}
+.zero-summary-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 14px;
+  margin: 25px 0 10px;
+}
+.zero-summary-heading h2 {
+  font-size: 14px;
+  font-weight: 550;
+  margin: 0;
+}
+.zero-summary-heading > span {
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.zero-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.zero-summary {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.zero-summary th,
+.zero-summary td {
+  padding: 11px 12px;
+  text-align: right;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--line);
+}
+.zero-summary thead th {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 500;
+}
+.zero-summary tr > :first-child {
+  text-align: left;
+  padding-left: 10px;
+}
+.zero-summary tbody th {
+  font-weight: 550;
+}
+.zero-summary td:last-child {
+  font-weight: 600;
+  color: var(--text);
+}
+.zero-selected-row {
+  background: var(--surface);
+}
+.zero-run-markers {
+  display: inline-flex;
+  gap: 3px;
+  margin-left: 8px;
+  min-width: 32px;
+}
+.zero-run-markers > span {
+  color: var(--lime);
+  font-size: 9px;
+  padding: 1px 4px;
+  border: 1px solid var(--selected-border);
+  border-radius: 3px;
+}
+.zero-summary-note {
+  margin-top: 10px;
+}
+.zero-identity {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  max-width: 95ch;
+  margin: 17px 0 0;
+  color: var(--secondary);
+  font-size: 11px;
+}
+.zero-identity > svg {
+  flex-shrink: 0;
+  color: var(--cyan);
+  margin-top: 2px;
+}
+.configuration-strip.zero-configuration {
+  grid-template-columns: 140px 150px minmax(0, 1fr) auto;
+}
+.configuration-strip.zero-configuration > .field {
+  min-width: 0;
+}
+.configuration-strip.zero-configuration .batch-identity {
+  grid-column: 3;
+  grid-row: 1;
+}
+.configuration-strip.zero-configuration .configure-button {
+  grid-column: 4;
+  grid-row: 1;
+}
+.zero-run-ownership {
+  margin-bottom: 18px;
+}
+.zero-run-ownership > p {
+  color: var(--secondary);
+  font-size: 11px;
+  margin: 0 0 12px;
+  max-width: 75ch;
+}
+.zero-run-ownership dl {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+.zero-run-ownership dt {
+  color: var(--muted);
+  font-size: 10px;
+}
+.zero-run-ownership dd {
+  color: var(--text);
+  font-size: 11px;
+  margin: 4px 0 0;
+}
+@media (max-width: 1000px) {
+  .configuration-strip.zero-configuration {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  }
+  .configuration-strip.zero-configuration .batch-identity {
+    grid-column: 1 / 3;
+    grid-row: 2;
+  }
+  .configuration-strip.zero-configuration .configure-button {
+    grid-column: 3;
+    grid-row: 1 / 3;
+  }
+}
+@media (max-width: 720px) {
+  .zero-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .zero-profile {
+    grid-column: 1 / -1;
+  }
+  .zero-summary {
+    min-width: 670px;
+  }
+  .configuration-strip.zero-configuration {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .configuration-strip.zero-configuration > .field {
+    grid-column: auto;
+  }
+  .configuration-strip.zero-configuration .batch-identity,
+  .configuration-strip.zero-configuration .configure-button {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+  .zero-run-ownership dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

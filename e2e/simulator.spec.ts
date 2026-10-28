@@ -219,7 +219,7 @@ test("exports both runs, imports locally, rejects malformed data, and shares a r
   const download = await downloaded;
   const contents = await readFile((await download.path())!, "utf8");
   const exported = JSON.parse(contents);
-  expect(exported.schemaVersion).toBe(2);
+  expect(exported.schemaVersion).toBe(3);
   expect(exported.events.length).toBeGreaterThan(50);
   expect(exported.memoryHistory.length).toBe(exported.events.length);
   expect(exported.comparison.inputConfiguration.prefetch).toBe(1);
@@ -252,7 +252,7 @@ test("exports both runs, imports locally, rejects malformed data, and shares a r
   await expect(page.getByRole("status")).toContainText("link copied");
   const shared = await page.evaluate(() => navigator.clipboard.readText());
   const copied = new URL(shared);
-  expect(copied.searchParams.get("v")).toBe("2");
+  expect(copied.searchParams.get("v")).toBe("3");
   const savedSession = JSON.parse(copied.searchParams.get("config")!);
   expect(savedSession.config.seed).toBe(42);
   expect(savedSession.scenario).toBe("prefetch");

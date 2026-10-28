@@ -1,10 +1,15 @@
 import { engineMessages } from "../messages";
 import type { Config, Dependency, Layer } from "../types";
+import { stateLayout } from "../state-layout";
 import { shardRange } from "../ownership";
 import { bufferId, createPlan, end, start } from "./plan";
 
 export function fsdpPlan(config: Config, layers: Layer[]) {
-  const { plan, ranks, allocate, operation } = createPlan(config, layers);
+  const { plan, ranks, allocate, operation, optimizerReads } = createPlan(
+    config,
+    layers,
+  );
+  const layout = stateLayout(config);
   const localBatch = config.globalBatch / config.ranks;
   const prefetch = config.reshardAfterForward && config.prefetch === 1;
   const gathered = (phase: "f" | "b", layer: number, rank: number) =>
@@ -19,7 +24,7 @@ export function fsdpPlan(config: Config, layers: Layer[]) {
         category: "temporary",
         ownership: "gathered",
         label: engineMessages.allocations.gathered[phase],
-        bytes: layer.elements * 4,
+        bytes: layer.elements * layout.parameterBytes,
         range: [0, layer.elements],
       }),
     );
@@ -43,7 +48,7 @@ export function fsdpPlan(config: Config, layers: Layer[]) {
         category: "gradients",
         ownership: "shard",
         label: engineMessages.allocations.gradientShard,
-        bytes: (layer.elements * 4) / config.ranks,
+        bytes: (layer.elements * layout.gradientBytes) / config.ranks,
         range: shardRange(layer.elements, config.ranks, rank),
       }),
     );
@@ -76,7 +81,10 @@ export function fsdpPlan(config: Config, layers: Layer[]) {
         category: "activations",
         ownership: "local",
         label: engineMessages.allocations.savedInput,
-        bytes: localBatch * layer.activationElementsPerSample * 4,
+        bytes:
+          localBatch *
+          layer.activationElementsPerSample *
+          layout.activationBytes,
         range: [0, localBatch * layer.activationElementsPerSample],
       });
       const parameters = gathered("f", layer.id, rank);
@@ -103,7 +111,7 @@ export function fsdpPlan(config: Config, layers: Layer[]) {
         category: "gradients",
         ownership: "local",
         label: engineMessages.allocations.fullGradient,
-        bytes: layer.elements * 4,
+        bytes: layer.elements * layout.gradientBytes,
         range: [0, layer.elements],
       });
       const parameters = gathered(
@@ -172,8 +180,7 @@ export function fsdpPlan(config: Config, layers: Layer[]) {
       [rank],
       layers.map((layer) => end(`rs:${layer.id}`)),
       layers.flatMap((layer) => [
-        bufferId("p", layer.id, rank),
-        bufferId("m", layer.id, rank),
+        ...optimizerReads(layer.id, rank),
         bufferId("gs", layer.id, rank),
       ]),
       [],

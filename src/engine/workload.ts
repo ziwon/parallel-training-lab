@@ -21,10 +21,11 @@ export function parameterIndices(
   width = REPRESENTATIVE_WIDTH,
 ): number[] {
   return Array.from({ length: width * width }, (_, i) => i).filter((index) => {
-    if (strategy === "ddp") return true;
+    if (strategy === "ddp" || strategy === "zero1" || strategy === "zero2")
+      return true;
     if (strategy === "pp") return stageOwner(layer, ranks) === rank;
     if (strategy === "ep") return expertOwner(layer, ranks) === rank;
-    if (strategy === "fsdp")
+    if (strategy === "fsdp" || strategy === "zero3")
       return Math.floor((index * ranks) / (width * width)) === rank;
     const coordinate =
       layer % 2 === 0 ? index % width : Math.floor(index / width);

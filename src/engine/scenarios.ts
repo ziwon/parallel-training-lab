@@ -1,5 +1,5 @@
 import { parseConfig } from "./config";
-import type { Config, ScenarioId } from "./types";
+import type { Config, ScenarioId, SessionConfig } from "./types";
 
 export const scenarioIds = [
   "strategies",
@@ -10,6 +10,17 @@ export const scenarioIds = [
   "pipeline",
   "experts",
 ] as const;
+
+export function resolveSessionRuns(session: SessionConfig): Config[] {
+  if (session.scenario === "zero") {
+    return session.zeroPair.map((strategy) =>
+      parseConfig({ ...session.config, strategy }),
+    );
+  }
+  return session.compare
+    ? scenarioPair(session.config, session.scenario).map(parseConfig)
+    : [parseConfig(session.config)];
+}
 
 export function scenarioPair(
   base: Config,

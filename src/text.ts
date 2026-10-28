@@ -11,7 +11,7 @@ export const text = {
   compare: "Compare runs",
   guide: "Model & assumptions",
   browserOnly: "Runs in your browser",
-  version: "v2.0.0",
+  version: "v3.0.0",
   noGPU: "No GPU required.",
   companion: "Open NCCL Lab",
   workspace: "Workspace",
@@ -26,9 +26,21 @@ export const text = {
   close: "Close",
   cancel: "Cancel",
   apply: "Apply settings",
-  strategies: { ddp: "DDP", fsdp: "FSDP", tp: "TP", pp: "PP", ep: "EP" },
+  strategies: {
+    ddp: "DDP",
+    zero1: "ZeRO-1",
+    zero2: "ZeRO-2",
+    zero3: "ZeRO-3",
+    fsdp: "FSDP",
+    tp: "TP",
+    pp: "PP",
+    ep: "EP",
+  },
   strategyNames: {
     ddp: "Distributed data parallel",
+    zero1: "Shard optimizer state",
+    zero2: "Shard gradients and optimizer state",
+    zero3: "Shard all model state",
     fsdp: "Fully sharded data parallel",
     tp: "Tensor parallel",
     pp: "Pipeline parallel",
@@ -89,6 +101,10 @@ export const text = {
     `Reduction: ${reduction.toUpperCase()}`,
   partitionCaption: {
     ddp: "Local compute → AllReduce AVERAGE → matching replicas",
+    zero1: "AllReduce gradients → owned update → AllGather updated parameters",
+    zero2:
+      "ReduceScatter gradients → owned update → AllGather updated parameters",
+    zero3: "AllGather parameters → compute → ReduceScatter gradients",
     fsdp: "AllGather parameters → compute → ReduceScatter gradients",
     tp: "Column outputs → row partial sums → AllReduce SUM",
     pp: "Activations → · ← input gradients",
@@ -131,6 +147,38 @@ export const text = {
       note: "Run B multiplies the last rank’s compute duration by two. This is a synthetic delay. Other ranks wait only at required collective dependencies.",
     },
   },
+  zeroTitle: "ZeRO Stage Explorer",
+  zeroSubtitle:
+    "Follow state ownership from full replicas to fully sharded training.",
+  zeroIntro:
+    "Choose any two stages. Both runs share the model, samples, global batch, ranks, seed, and storage profile.",
+  zeroIdentity:
+    "DDP replicates the model and synchronizes gradients. ZeRO removes state redundancy in stages. FSDP is PyTorch’s fully sharded data parallel implementation.",
+  zeroProfile: "Storage profile",
+  precisionProfiles: { fp32: "FP32 Adam", "bf16-master": "BF16 + FP32 master" },
+  zeroProfileBreakdown: {
+    fp32: "4 B parameters + 4 B gradients + 0 B master + 8 B Adam moments = 16 B / parameter",
+    "bf16-master":
+      "2 B parameters + 2 B gradients + 4 B master + 8 B Adam moments = 16 B / parameter",
+  },
+  zeroProfileNote:
+    "Storage and traffic only. Arithmetic uses JavaScript numbers without BF16 rounding. Saved activations follow the selected parameter dtype.",
+  zeroSummary: "Model-state footprint with gradients",
+  zeroSummaryNote:
+    "Theoretical bytes per rank. Includes gradient shards at their settled size; excludes activations and temporary buffers. Initial usage and the actual peak differ. Inspect the live memory ledger below.",
+  zeroTotal: "Total / rank",
+  zeroPerParameter: "B / model param",
+  zeroMaster: "FP32 master",
+  zeroMoments: "Adam moments",
+  zeroOwnership: "Model-state ownership",
+  zeroReplicated: "replicated",
+  zeroSharded: (ranks: number) => `1/${ranks} shard`,
+  zeroStageControl: (run: string) => `${run} stage`,
+  parameterSync: "Updated parameter synchronization",
+  parameterSyncWhy:
+    "Each rank has updated only its optimizer-owned parameter slice. This all-gather copies those updated slices into every persistent model replica so the next training step starts with matching parameters. It does not create a temporary compute buffer.",
+  zero1ReductionWhy:
+    "All-reduce averages the full local gradients. Each rank then uses only its optimizer-owned slice for Adam. Updated parameter slices must be all-gathered afterward to restore matching replicas.",
   strategy: "Strategy",
   ranks: "Logical ranks",
   globalBatch: "Global batch",
@@ -149,7 +197,7 @@ export const text = {
   modelScaleHint:
     "Scales virtual storage and work. Representative arithmetic stays small.",
   bucketLayers: "Layers per gradient bucket",
-  overlap: "Overlap DDP reduction with backward",
+  overlap: "Overlap gradient reduction with backward",
   reshard: "Reshard after forward",
   prefetch: "Backward prefetch",
   noPrefetch: "Off · depth 0",
@@ -212,6 +260,7 @@ export const text = {
     "This run has exceeded capacity. OOM stays flagged after memory is released; all modeled allocations remain visible.",
   categories: {
     parameters: "Parameters",
+    masterParameters: "FP32 master weights",
     gradients: "Gradients",
     optimizer: "Adam states",
     activations: "Activations",
@@ -220,6 +269,7 @@ export const text = {
   },
   categoryCodes: {
     parameters: "P",
+    masterParameters: "M",
     gradients: "G",
     optimizer: "O",
     activations: "A",
@@ -314,7 +364,7 @@ export const text = {
   noChanges: "No allocation changes.",
   numerics: "Representative arithmetic",
   sampleNotice:
-    "Tiny JavaScript-number samples. FP32 labels describe virtual storage, not rounded arithmetic.",
+    "Tiny JavaScript-number samples. FP32 and BF16 labels describe virtual storage and traffic, not rounded arithmetic.",
   sampleParameter: "Parameter sample",
   initial: "Initial",
   now: "Now",
@@ -336,19 +386,22 @@ export const text = {
   assumptionsIntro:
     "This lab explains ownership and dependencies for one training step. It does not execute PyTorch or predict GPU throughput.",
   assumptions: [
-    "DDP, FSDP, TP and PP share four dense linear layers; tiny 8×8 matrices provide numerical checks. EP uses a separate eight-expert linear MoE with a fixed top-1 router. Virtual tensor sizes drive memory and timing.",
-    "FP32 parameters, gradients, saved activations, and two Adam moments. There are no separate master weights or communication scratch allocations.",
+    "DDP, ZeRO, FSDP, TP and PP share four dense linear layers; tiny 8×8 matrices provide numerical checks. EP uses a separate eight-expert linear MoE with a fixed top-1 router. Virtual tensor sizes drive memory and timing.",
+    "FP32 Adam uses 4-byte parameters, 4-byte gradients, 4-byte saved activations, and two 4-byte moments without separate master weights. In the ZeRO explorer, BF16 + FP32 master uses 2-byte parameters, gradients, and saved activations, plus 4-byte master weights and two 4-byte moments. Both profiles total 16 model-state bytes per parameter before sharding, including gradients.",
     "One compute lane per rank and one collective lane shared by the process group. Compute and communication can overlap only when their dependencies permit it.",
-    "FSDP materializes complete parameter buffers before local layer computation. It shards model state, not the mathematical layer work.",
-    "All-gather and reduce-scatter use separate output allocations, even with one rank. One-rank communication takes zero time and transfers zero bytes.",
-    "The global batch stays fixed. DDP/FSDP average equal local batches. TP cooperates on the same samples. PP uses GPipe microbatches and weights each microbatch by its share of the global batch. EP routes every token exactly once.",
+    "DDP replicates state and synchronizes gradients. ZeRO removes state redundancy in stages. FSDP is PyTorch’s fully sharded data parallel implementation. The ZeRO-3 and FSDP plans here both materialize complete layers for local computation; they do not partition the mathematical layer work.",
+    "ZeRO-3 and FSDP gather parameters into separate compute buffers. Reduce-scatter also allocates separate output shards, even with one rank. ZeRO-1 and ZeRO-2 instead all-gather updated parameters into their persistent replicas. One-rank communication takes zero time and transfers zero bytes.",
+    "The global batch stays fixed. DDP, ZeRO, and FSDP average equal local batches. TP cooperates on the same samples. PP uses GPipe microbatches and weights each microbatch by its share of the global batch. EP routes every token exactly once.",
     "Timing uses synthetic FLOP budgets and a latency-plus-bandwidth ring cost. There is no physical topology, GPU kernel execution, or hardware benchmark.",
-    "Layer groups have a uniform reshard policy. Root-module special cases, allocator caching, multiple communicators, mixed precision, offload, and activation checkpointing are outside this model.",
+    "Layer groups have a uniform reshard policy. BF16 changes modeled storage and traffic only. It does not emulate rounding, loss scaling, or mixed-precision kernels. Root-module special cases, allocator caching, multiple communicators, offload, and activation checkpointing are outside this model.",
   ],
   footer:
     "Model time, not measured throughput. Logical ranks, not physical wiring.",
   strategyShort: {
     ddp: "Split the data",
+    zero1: "Shard optimizer state",
+    zero2: "Shard gradients too",
+    zero3: "Shard parameters too",
     fsdp: "Shard model state",
     tp: "Split each matrix",
     pp: "Assign layer stages",
@@ -356,6 +409,12 @@ export const text = {
   },
   strategyExplain: {
     ddp: "Each rank keeps a full model and processes different samples. Gradient all-reduce makes the replicas agree.",
+    zero1:
+      "Parameters and gradients remain replicated. Each rank owns a slice of Adam state, updates that slice, then all-gathers updated parameters into every replica.",
+    zero2:
+      "Parameters remain replicated. Reduce-scatter leaves owned gradient shards for the sharded optimizer; an all-gather restores matching updated parameter replicas.",
+    zero3:
+      "Parameters, gradients, and optimizer state are sharded. Each rank gathers complete layers when needed for local work and releases them according to the reshard policy.",
     fsdp: "Each rank owns model-state shards, gathers a complete layer to compute on local samples, then reduces gradients to their owners.",
     tp: "All ranks work on the same samples. Column partitions produce distinct features; row partitions produce partial sums that require all-reduce.",
     pp: "Each rank owns consecutive layers. GPipe sends microbatch activations forward and derivatives backward, then applies one accumulated update.",

@@ -4,6 +4,14 @@
 
 Every comparison holds the model, seed, global batch, optimizer, and learning rate fixed. Changing bandwidth, retention, prefetch, or synthetic rank speed changes the execution model rather than the learning problem. Both panels follow the same simulated clock. Their inspectors can select different event boundaries.
 
+## ZeRO Stage Explorer
+
+Choose any two of DDP, ZeRO-1, ZeRO-2, and ZeRO-3. Change the shared storage profile between FP32 and BF16 with FP32 master weights. The four-stage summary includes gradients and separates master weights from Adam moments. It excludes activations and temporary buffers.
+
+Compare ZeRO-1 with ZeRO-2 to see full gradient AllReduce become ReduceScatter. Follow either run past Adam to its parameter AllGather, which restores complete updated replicas. Compare ZeRO-2 with ZeRO-3 to see parameter shards require gathers before computation. Change retention or backward prefetch to observe when those gathered buffers occupy memory.
+
+The theoretical summary stays fixed as you scrub. The memory ledger changes with allocation lifetimes, so its current and peak totals need not match the summary. BF16 changes storage and traffic widths, while representative arithmetic uses the same JavaScript numbers.
+
 ## DDP versus FSDP
 
 The left run uses DDP and the right run uses FSDP. At initialization, compare persistent parameter and optimizer allocations. DDP has complete replicas. FSDP has one owned shard of every group per rank.

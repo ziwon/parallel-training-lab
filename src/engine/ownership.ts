@@ -48,16 +48,21 @@ export function parameterOwnership(config: Config, layers: Layer[]) {
       .map((rank) => {
         const whole =
           config.strategy === "ddp" ||
+          config.strategy === "zero1" ||
+          config.strategy === "zero2" ||
           config.strategy === "pp" ||
           config.strategy === "ep";
-        const ownership: Allocation["ownership"] =
-          config.strategy === "ddp"
-            ? "replica"
-            : config.strategy === "pp"
-              ? "stage"
-              : config.strategy === "ep"
-                ? "expert"
-                : "shard";
+        const ownership: Allocation["ownership"] = [
+          "ddp",
+          "zero1",
+          "zero2",
+        ].includes(config.strategy)
+          ? "replica"
+          : config.strategy === "pp"
+            ? "stage"
+            : config.strategy === "ep"
+              ? "expert"
+              : "shard";
         return {
           layer: layer.id,
           rank,

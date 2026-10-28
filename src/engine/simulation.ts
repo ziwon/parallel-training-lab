@@ -12,10 +12,14 @@ import type { Config, Operation, Simulation, Snapshot } from "./types";
 export function simulate(input: Config): Simulation {
   const config = parseConfig(input);
   const layers = modelFor(config);
-  if (config.strategy === "fsdp") validateLayerSharding(layers, config.ranks);
+  if (["fsdp", "zero1", "zero2", "zero3"].includes(config.strategy))
+    validateLayerSharding(layers, config.ranks);
   const compilers = {
     ddp: ddpPlan,
     fsdp: fsdpPlan,
+    zero1: ddpPlan,
+    zero2: ddpPlan,
+    zero3: fsdpPlan,
     tp: tpPlan,
     pp: ppPlan,
     ep: epPlan,

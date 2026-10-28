@@ -1,7 +1,10 @@
-export type Strategy = "ddp" | "fsdp" | "tp" | "pp" | "ep";
+export type ZeroStrategy = "ddp" | "zero1" | "zero2" | "zero3";
+export type Strategy = ZeroStrategy | "fsdp" | "tp" | "pp" | "ep";
+export type PrecisionProfile = "fp32" | "bf16-master";
 export type RankCount = 1 | 2 | 4 | 8;
 export interface Config {
   strategy: Strategy;
+  precision: PrecisionProfile;
   ranks: RankCount;
   globalBatch: number;
   microbatches: 1 | 2 | 4 | 8;
@@ -31,6 +34,7 @@ export const categories = [
   "parameters",
   "gradients",
   "optimizer",
+  "masterParameters",
   "activations",
   "temporary",
   "scratch",
@@ -99,6 +103,7 @@ export interface Operation {
     | "ep-backward-dispatch"
     | "ep-backward-combine";
   reduction?: "sum" | "average";
+  purpose?: "parameter-sync";
 }
 export interface SimulationEvent {
   index: number;
@@ -141,8 +146,11 @@ export type ScenarioId =
   | "tensor"
   | "pipeline"
   | "experts";
-export interface SessionConfig {
-  config: Config;
-  compare: boolean;
-  scenario: ScenarioId;
-}
+export type SessionConfig =
+  | { config: Config; compare: boolean; scenario: ScenarioId; zeroPair?: never }
+  | {
+      config: Config;
+      compare: true;
+      scenario: "zero";
+      zeroPair: [ZeroStrategy, ZeroStrategy];
+    };

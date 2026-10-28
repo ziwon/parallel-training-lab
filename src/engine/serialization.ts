@@ -1,9 +1,16 @@
 import { defaultConfig, parseConfig } from "./config";
-import { scenarioIds, scenarioPair } from "./scenarios";
-import type { SessionConfig, Simulation } from "./types";
+import { resolveSessionRuns, scenarioIds } from "./scenarios";
+import { isZeroStrategy, stateLayout } from "./state-layout";
+import type {
+  Config,
+  ScenarioId,
+  SessionConfig,
+  Simulation,
+  ZeroStrategy,
+} from "./types";
 
-export const SCHEMA_VERSION = 2;
-export const SIMULATOR_VERSION = "2.0.0";
+export const SCHEMA_VERSION = 3;
+export const SIMULATOR_VERSION = "3.0.0";
 export const MAX_IMPORT_BYTES = 10 * 1_048_576;
 
 export const modelAssumptions = {
@@ -19,7 +26,7 @@ export const modelAssumptions = {
     "JavaScript numbers. FP32 storage labels do not emulate FP32 rounding.",
   accumulationSteps: 1,
   batchPolicy:
-    "Fixed global batch. DDP/FSDP split equal local batches; TP shares samples across matrix partitions; GPipe accumulates microbatches; EP routes source tokens to unique experts.",
+    "Fixed global batch. DDP, ZeRO, and FSDP split equal local batches; TP shares samples across matrix partitions; GPipe accumulates microbatches; EP routes source tokens to unique experts.",
   optimizer: {
     name: "Adam",
     steps: 1,
@@ -32,7 +39,7 @@ export const modelAssumptions = {
   resources:
     "One compute lane per rank and one serialized communication lane for collectives and point-to-point transfers.",
   parameterGroups:
-    "One group per dense layer or MoE expert. FSDP uses equal flat shards, TP uses row/column partitions, PP owns whole layers, and EP owns whole experts. No padding.",
+    "One group per dense layer or MoE expert. ZeRO and FSDP use equal flat shards, TP uses row/column partitions, PP owns whole layers, and EP owns whole experts. No padding.",
   ddpBuckets:
     "Gradient bucket views alias gradient tensors and have no second allocation.",
   fsdpBuffers:
@@ -41,8 +48,39 @@ export const modelAssumptions = {
   activations:
     "Saved inputs follow actual sample, microbatch, or routed-token counts and full/sharded feature layout; each representative token stands for 128 virtual positions. Transfer buffers have explicit lifetimes.",
   scope:
-    "One sequential training step. No runtime, hardware topology, root-module special case, mixed precision, checkpointing, offload, or profiler import.",
+    "One sequential training step. No runtime, hardware topology, root-module special case, precision rounding, checkpointing, offload, or profiler import.",
 } as const;
+
+export function assumptionsFor(config: Config) {
+  const layout = stateLayout(config);
+  const mixed = layout.masterBytes > 0;
+  const storage = mixed ? "BF16" : "FP32";
+  return {
+    ...modelAssumptions,
+    precisionProfile: config.precision,
+    storageDtypes: {
+      parameters: storage,
+      compute: "JavaScript numbers",
+      gradients: storage,
+      optimizer: "FP32",
+      masterParameters: mixed ? "FP32" : null,
+      activations: storage,
+    },
+    arithmetic:
+      "JavaScript numbers. Storage and traffic widths do not emulate FP32 or BF16 rounding, accumulation, or hardware throughput.",
+    optimizer: { ...modelAssumptions.optimizer, masterParameters: mixed },
+    stateBytesPerParameter: {
+      parameters: layout.parameterBytes,
+      gradients: layout.gradientBytes,
+      masterParameters: layout.masterBytes,
+      adamMoments: layout.momentBytes,
+    },
+    zeroSchedule:
+      "ZeRO-1 averages full gradients; ZeRO-2 reduce-scatters gradients. Both update optimizer-owned indices, then AllGather updated parameters into persistent replicas. ZeRO-3 gathers parameters on demand and releases them according to reshard and prefetch settings.",
+    modelStateSummary:
+      "Theoretical parameter, gradient, master, and moment footprint with gradients present. Excludes activations and transient buffers; it is not initial, final, or peak allocated memory.",
+  };
+}
 
 function record(value: unknown, name: string): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value))
@@ -53,32 +91,67 @@ function record(value: unknown, name: string): Record<string, unknown> {
 function parseSharedConfig(value: unknown, version: number) {
   const config = record(value, "Configuration");
   const required = Object.keys(defaultConfig).filter(
-    (key) => version !== 1 || key !== "microbatches",
+    (key) =>
+      (version >= 3 || key !== "precision") &&
+      (version !== 1 || key !== "microbatches"),
   );
   for (const key of required) {
     if (!Object.hasOwn(config, key))
       throw new Error(`Shared configuration is missing ${key}.`);
   }
-  if (version === 1) {
-    if (config.strategy !== "ddp" && config.strategy !== "fsdp")
-      throw new Error("Version 1 supports only DDP and FSDP.");
-    if (Object.hasOwn(config, "microbatches"))
-      throw new Error("Version 1 configuration contains a version 2 field.");
-    return parseConfig({ ...config, microbatches: defaultConfig.microbatches });
-  }
-  return parseConfig(config);
+  if (Object.keys(config).some((key) => !required.includes(key)))
+    throw new Error(
+      `Version ${version} configuration contains an unsupported field.`,
+    );
+  if (version === 1 && config.strategy !== "ddp" && config.strategy !== "fsdp")
+    throw new Error("Version 1 supports only DDP and FSDP.");
+  if (
+    version <= 2 &&
+    !["ddp", "fsdp", "tp", "pp", "ep"].includes(String(config.strategy))
+  )
+    throw new Error(`Version ${version} contains an unsupported strategy.`);
+  return parseConfig({
+    ...config,
+    ...(version === 1 ? { microbatches: defaultConfig.microbatches } : {}),
+    ...(version <= 2 ? { precision: "fp32" } : {}),
+  });
 }
 
 function parseSession(value: unknown, version = SCHEMA_VERSION): SessionConfig {
   const session = record(value, "Session");
-  if (
-    Object.keys(session).some(
-      (key) => !["config", "compare", "scenario"].includes(key),
-    )
-  )
+  const explorer = version === 3 && session.scenario === "zero";
+  const fields = explorer
+    ? ["config", "compare", "scenario", "zeroPair"]
+    : ["config", "compare", "scenario"];
+  if (Object.keys(session).some((key) => !fields.includes(key)))
     throw new Error("Session contains an unsupported field.");
   if (typeof session.compare !== "boolean")
     throw new Error("Comparison mode must be a boolean.");
+  const config = parseSharedConfig(session.config, version);
+  if (explorer) {
+    if (session.compare !== true || config.strategy !== "ddp")
+      throw new Error(
+        "ZeRO Explorer requires comparison mode and a DDP base configuration.",
+      );
+    if (
+      !Array.isArray(session.zeroPair) ||
+      session.zeroPair.length !== 2 ||
+      !session.zeroPair.every(
+        (stage) =>
+          typeof stage === "string" &&
+          isZeroStrategy(stage as Config["strategy"]),
+      )
+    )
+      throw new Error("ZeRO Explorer requires two supported stages.");
+    const parsed: SessionConfig = {
+      config,
+      compare: true,
+      scenario: "zero",
+      zeroPair: session.zeroPair as [ZeroStrategy, ZeroStrategy],
+    };
+    resolveSessionRuns(parsed);
+    return parsed;
+  }
   if (
     typeof session.scenario !== "string" ||
     !scenarioIds.some((id) => id === session.scenario)
@@ -89,13 +162,19 @@ function parseSession(value: unknown, version = SCHEMA_VERSION): SessionConfig {
     !["strategies", "reshard", "prefetch", "slow"].includes(session.scenario)
   )
     throw new Error("Version 1 contains an unsupported scenario.");
+  if (
+    config.precision !== "fp32" ||
+    !["ddp", "fsdp", "tp", "pp", "ep"].includes(config.strategy)
+  )
+    throw new Error(
+      "ZeRO stages and mixed storage profiles require ZeRO Explorer.",
+    );
   const parsed: SessionConfig = {
-    config: parseSharedConfig(session.config, version),
+    config,
     compare: session.compare,
-    scenario: session.scenario as SessionConfig["scenario"],
+    scenario: session.scenario as ScenarioId,
   };
-  if (parsed.compare)
-    scenarioPair(parsed.config, parsed.scenario).forEach(parseConfig);
+  resolveSessionRuns(parsed);
   return parsed;
 }
 
@@ -119,7 +198,7 @@ export function decodeSession(search: string): SessionConfig {
   const parameters = new URLSearchParams(search);
   if (
     parameters.getAll("v").length !== 1 ||
-    !["1", String(SCHEMA_VERSION)].includes(parameters.get("v") ?? "")
+    !["1", "2", String(SCHEMA_VERSION)].includes(parameters.get("v") ?? "")
   )
     throw new Error("Unsupported configuration link version.");
   if (
@@ -155,7 +234,7 @@ export function createExport(
     session: parseSession(session),
     inputConfiguration: run.config,
     assumptions: {
-      ...modelAssumptions,
+      ...assumptionsFor(run.config),
       accumulationSteps:
         run.config.strategy === "pp" ? run.config.microbatches : 1,
       workload:
@@ -212,13 +291,11 @@ export function importExport(text: string): SessionConfig {
   const data = record(value, "Export");
   if (
     data.schema !== "parallel-viz" ||
-    (data.schemaVersion !== 1 && data.schemaVersion !== SCHEMA_VERSION)
+    ![1, 2, SCHEMA_VERSION].includes(Number(data.schemaVersion)) ||
+    typeof data.schemaVersion !== "number"
   )
     throw new Error("Unsupported export schema.");
-  if (
-    data.simulatorVersion !==
-    (data.schemaVersion === 1 ? "1.0.0" : SIMULATOR_VERSION)
-  )
+  if (data.simulatorVersion !== `${data.schemaVersion}.0.0`)
     throw new Error(
       "This export was created by a different simulator version.",
     );

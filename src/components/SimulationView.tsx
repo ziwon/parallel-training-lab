@@ -27,6 +27,7 @@ import {
   batchDescription,
 } from "../engine/workload";
 import { bytes, count, ms } from "../format";
+import { isShardedDataParallel, stateLayout } from "../engine/state-layout";
 import { text as t } from "../text";
 
 export interface Focus {
@@ -47,6 +48,7 @@ interface Props {
   onBoundary: (index: number) => void;
   label: string;
   compact?: boolean;
+  zeroMode?: boolean;
 }
 const kindAbbreviation = t.operationAbbreviations;
 const groupLabel = (run: Simulation, layer: number) =>
@@ -76,7 +78,9 @@ export function SimulationView({
   onBoundary,
   label,
   compact,
+  zeroMode,
 }: Props) {
+  const layout = stateLayout(run.config);
   const numericalState = getNumericalSnapshot(numerical, snapshot.eventIndex);
   const rank = Math.min(focus.rank, run.config.ranks - 1);
   const selected = run.operations.find((op) => op.id === focus.operation);
@@ -99,25 +103,27 @@ export function SimulationView({
     ? t.complete
     : snapshot.eventIndex === 0
       ? t.initialized
-      : executing.some((op) => op.kind === "adam")
-        ? t.adam
-        : executing.some((op) => op.kind === "backward")
-          ? t.backward
-          : executing.some((op) => op.phaseTag === "tp-forward-sum")
-            ? t.tpForwardPhase
-            : executing.some((op) => op.phaseTag === "tp-backward-sum")
-              ? t.tpBackwardPhase
-              : executing.some((op) => op.phaseTag?.startsWith("ep-backward"))
-                ? t.backward
-                : executing.some(
-                      (op) =>
-                        op.kind === "all-reduce" ||
-                        op.kind === "reduce-scatter",
-                    )
-                  ? t.sync
-                  : executing.some((op) => op.id.startsWith("ag:b:"))
-                    ? t.backward
-                    : t.forward;
+      : executing.some((op) => op.purpose === "parameter-sync")
+        ? t.parameterSync
+        : executing.some((op) => op.kind === "adam")
+          ? t.adam
+          : executing.some((op) => op.kind === "backward")
+            ? t.backward
+            : executing.some((op) => op.phaseTag === "tp-forward-sum")
+              ? t.tpForwardPhase
+              : executing.some((op) => op.phaseTag === "tp-backward-sum")
+                ? t.tpBackwardPhase
+                : executing.some((op) => op.phaseTag?.startsWith("ep-backward"))
+                  ? t.backward
+                  : executing.some(
+                        (op) =>
+                          op.kind === "all-reduce" ||
+                          op.kind === "reduce-scatter",
+                      )
+                    ? t.sync
+                    : executing.some((op) => op.id.startsWith("ag:b:"))
+                      ? t.backward
+                      : t.forward;
   return (
     <article
       className={`simulation ${compact ? "compact" : ""}`}
@@ -135,6 +141,47 @@ export function SimulationView({
         </span>
       </div>
       <p className="run-batch-description">{batchDescription(run.config)}</p>
+      {zeroMode && (
+        <div className="zero-run-ownership">
+          <p>{t.strategyExplain[run.config.strategy]}</p>
+          <dl aria-label={t.zeroOwnership}>
+            <div>
+              <dt>{t.categories.parameters}</dt>
+              <dd>
+                {layout.parameterSharded
+                  ? t.zeroSharded(run.config.ranks)
+                  : t.zeroReplicated}
+              </dd>
+            </div>
+            <div>
+              <dt>{t.categories.gradients}</dt>
+              <dd>
+                {layout.gradientSharded
+                  ? `${t.zeroSharded(run.config.ranks)} after RS`
+                  : t.zeroReplicated}
+              </dd>
+            </div>
+            <div>
+              <dt>{t.zeroMaster}</dt>
+              <dd>
+                {!layout.masterBytes
+                  ? "None"
+                  : layout.optimizerSharded
+                    ? t.zeroSharded(run.config.ranks)
+                    : t.zeroReplicated}
+              </dd>
+            </div>
+            <div>
+              <dt>{t.zeroMoments}</dt>
+              <dd>
+                {layout.optimizerSharded
+                  ? t.zeroSharded(run.config.ranks)
+                  : t.zeroReplicated}
+              </dd>
+            </div>
+          </dl>
+        </div>
+      )}
       <div className="metrics">
         <div>
           <span>{t.duration}</span>
@@ -149,7 +196,9 @@ export function SimulationView({
             {bytes(Math.max(...lastSnapshot.memory.map((m) => m.peakTotal)))}
           </strong>
           <small>
-            {lastSnapshot.memory.some((m) => m.oom) ? t.oom : t.precision}
+            {lastSnapshot.memory.some((m) => m.oom)
+              ? t.oom
+              : t.precisionProfiles[run.config.precision]}
           </small>
         </div>
         <div>
@@ -311,9 +360,9 @@ export function SimulationView({
                     </button>
                     <div className="rank-meta">
                       <span>
-                        {run.config.strategy === "ddp"
+                        {["ddp", "zero1", "zero2"].includes(run.config.strategy)
                           ? t.replica
-                          : run.config.strategy === "fsdp"
+                          : isShardedDataParallel(run.config.strategy)
                             ? t.shard(memory.rank, run.config.ranks)
                             : run.config.strategy === "tp"
                               ? t.tensorOwnership
@@ -339,7 +388,7 @@ export function SimulationView({
                         );
                         if (!storage) return null;
                         const gathered =
-                          run.config.strategy === "fsdp" &&
+                          isShardedDataParallel(run.config.strategy) &&
                           run.allocations.some(
                             (a) =>
                               a.rank === memory.rank &&
@@ -375,7 +424,9 @@ export function SimulationView({
                                   : groupLabel(run, layer.id)}
                               </strong>
                               <span>
-                                {run.config.strategy === "ddp"
+                                {["ddp", "zero1", "zero2"].includes(
+                                  run.config.strategy,
+                                )
                                   ? t.categoryCodes.parameters
                                   : `${t.categoryCodes.parameters}${memory.rank}`}
                               </span>
@@ -387,9 +438,14 @@ export function SimulationView({
                                   <i
                                     key={r}
                                     className={
-                                      ["ddp", "pp", "ep"].includes(
-                                        run.config.strategy,
-                                      ) || r === memory.rank
+                                      [
+                                        "ddp",
+                                        "zero1",
+                                        "zero2",
+                                        "pp",
+                                        "ep",
+                                      ].includes(run.config.strategy) ||
+                                      r === memory.rank
                                         ? "owned"
                                         : ""
                                     }
@@ -404,7 +460,9 @@ export function SimulationView({
                               >
                                 {gathered
                                   ? t.bufferLabels.full
-                                  : run.config.strategy === "ddp"
+                                  : ["ddp", "zero1", "zero2"].includes(
+                                        run.config.strategy,
+                                      )
                                     ? t.bufferLabels.replica
                                     : run.config.strategy === "tp"
                                       ? layer.id % 2 === 0
@@ -592,19 +650,24 @@ function Inspector({
   const layer = focus.layer ?? 0;
   const numericalRank = getNumericalSnapshot(numerical, snapshot.eventIndex)
     .rankStates[focus.rank];
-  const channel = parameterIndices(
+  const parameterChannels = parameterIndices(
     run.config.strategy,
     layer,
     focus.rank,
     run.config.ranks,
-  )[0];
+  );
+  const channel =
+    numericalRank.optimizerIndices[layer]?.[0] ?? parameterChannels[0];
   const initial = numerical.fixture.initialParameters[layer]?.[channel];
-  const now = numericalRank.parameters[layer]?.[0];
+  const now =
+    numericalRank.parameters[layer]?.[parameterChannels.indexOf(channel)];
   const gradient = numericalRank.gradients[layer];
-  const gradientSample =
-    gradient?.[
-      gradient.length === 64 && run.config.strategy === "fsdp" ? channel : 0
-    ];
+  const gradientIndex = numericalRank.synchronizedLayers.includes(layer)
+    ? numericalRank.synchronizedGradientIndices[layer]?.indexOf(channel)
+    : run.config.strategy === "tp"
+      ? parameterChannels.indexOf(channel)
+      : channel;
+  const gradientSample = gradient?.[gradientIndex ?? -1];
   return (
     <aside className="inspector">
       <div className="section-heading">
@@ -643,7 +706,11 @@ function Inspector({
               <Activity size={20} />
             )}
           </div>
-          <h3>{t.operationKinds[selected.kind]}</h3>
+          <h3>
+            {selected.purpose === "parameter-sync"
+              ? t.parameterSync
+              : t.operationKinds[selected.kind]}
+          </h3>
           <div className="operation-subtitle">
             {selected.layers.map((l) => groupLabel(run, l)).join(" + ")} ·{" "}
             {selected.ranks.length === 1
@@ -651,20 +718,26 @@ function Inspector({
               : `${selected.ranks.length} ${t.ranks.toLowerCase()}`}
           </div>
           <p>
-            {selected.phaseTag?.startsWith("tp-")
-              ? t.tpSumWhy
-              : (selected.kind === "forward" || selected.kind === "backward") &&
-                  run.config.strategy === "tp"
-                ? t.tpWhy
-                : (selected.kind === "forward" ||
-                      selected.kind === "backward") &&
-                    run.config.strategy === "pp"
-                  ? t.ppWhy
+            {selected.purpose === "parameter-sync"
+              ? t.parameterSyncWhy
+              : selected.kind === "all-reduce" &&
+                  run.config.strategy === "zero1"
+                ? t.zero1ReductionWhy
+                : selected.phaseTag?.startsWith("tp-")
+                  ? t.tpSumWhy
                   : (selected.kind === "forward" ||
                         selected.kind === "backward") &&
-                      run.config.strategy === "ep"
-                    ? t.epWhy
-                    : t.operationWhy[selected.kind]}
+                      run.config.strategy === "tp"
+                    ? t.tpWhy
+                    : (selected.kind === "forward" ||
+                          selected.kind === "backward") &&
+                        run.config.strategy === "pp"
+                      ? t.ppWhy
+                      : (selected.kind === "forward" ||
+                            selected.kind === "backward") &&
+                          run.config.strategy === "ep"
+                        ? t.epWhy
+                        : t.operationWhy[selected.kind]}
           </p>
           {selected.microbatch !== undefined && (
             <p className="operation-context">

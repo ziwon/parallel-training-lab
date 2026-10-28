@@ -39,6 +39,7 @@
   --yellow: #d8cf89;
   --pink: #d89dbd;
   --scratch: #94aaa8;
+  --master: #91abd9;
 }
 * {
   box-sizing: border-box;
@@ -1136,6 +1137,9 @@ main {
 .cat-gradients {
   background: var(--orange) !important;
 }
+.cat-masterParameters {
+  background: var(--master) !important;
+}
 .cat-optimizer {
   background: var(--purple) !important;
 }
@@ -1680,6 +1684,10 @@ dd {
 }
 .area-gradients {
   fill: var(--orange);
+  opacity: 0.7;
+}
+.area-masterParameters {
+  fill: var(--master);
   opacity: 0.7;
 }
 .area-optimizer {

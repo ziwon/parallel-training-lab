@@ -2,7 +2,11 @@ import { describe, expect, it } from "vitest";
 import { defaultConfig } from "../src/engine/config";
 import { collectiveLink } from "../src/engine/nccl";
 import { executeNumerics } from "../src/engine/numerics";
-import { scenarioIds, scenarioPair } from "../src/engine/scenarios";
+import {
+  resolveSessionRuns,
+  scenarioIds,
+  scenarioPair,
+} from "../src/engine/scenarios";
 import {
   createExport,
   decodeSession,
@@ -74,13 +78,14 @@ describe("versioned sharing", () => {
         scenario: strategy === "ep" ? "experts" : "pipeline",
       };
       const query = encodeSession(input);
-      expect(new URLSearchParams(query).get("v")).toBe("2");
+      expect(new URLSearchParams(query).get("v")).toBe("3");
       expect(decodeSession(query)).toEqual(input);
     },
   );
 
-  it("migrates complete version 1 DDP/FSDP inputs into version 2 configuration", () => {
-    const { microbatches, ...legacyConfig } = session.config;
+  it("migrates complete version 1 DDP/FSDP inputs into version 3 configuration", () => {
+    const { microbatches, precision, ...legacyConfig } = session.config;
+    expect(precision).toBe("fp32");
     expect(microbatches).toBe(4);
     const legacy = { ...session, config: legacyConfig };
     const query = `?v=1&config=${encodeURIComponent(JSON.stringify(legacy))}`;
@@ -104,6 +109,103 @@ describe("versioned sharing", () => {
         `?v=2&config=${encodeURIComponent(JSON.stringify(legacy))}`,
       ),
     ).toThrow(/microbatches/);
+  });
+
+  it("migrates complete version 2 strategy inputs and rejects new fields in legacy shapes", () => {
+    for (const strategy of ["ddp", "fsdp", "tp", "pp", "ep"] as const) {
+      const { precision, ...config } = { ...defaultConfig, strategy };
+      expect(precision).toBe("fp32");
+      const legacy = { config, compare: false, scenario: "strategies" };
+      const expected = { ...legacy, config: { ...config, precision: "fp32" } };
+      expect(
+        decodeSession(
+          `?v=2&config=${encodeURIComponent(JSON.stringify(legacy))}`,
+        ),
+      ).toEqual(expected);
+      const exported = createExport(run, session, {});
+      expect(
+        importExport(
+          JSON.stringify({
+            ...exported,
+            schemaVersion: 2,
+            simulatorVersion: "2.0.0",
+            session: legacy,
+            inputConfiguration: config,
+          }),
+        ),
+      ).toEqual(expected);
+      for (const patch of [{ precision: "fp32" }, { strategy: "zero1" }])
+        expect(() =>
+          decodeSession(
+            `?v=2&config=${encodeURIComponent(JSON.stringify({ ...legacy, config: { ...config, ...patch } }))}`,
+          ),
+        ).toThrow(/unsupported/);
+    }
+  });
+
+  it("round-trips every ZeRO pair and exports the selected profile assumptions", () => {
+    for (const precision of ["fp32", "bf16-master"] as const)
+      for (const a of ["ddp", "zero1", "zero2", "zero3"] as const)
+        for (const b of ["ddp", "zero1", "zero2", "zero3"] as const) {
+          const input: SessionConfig = {
+            config: { ...defaultConfig, precision },
+            compare: true,
+            scenario: "zero",
+            zeroPair: [a, b],
+          };
+          expect(decodeSession(encodeSession(input))).toEqual(input);
+          const configs = resolveSessionRuns(input);
+          expect(configs.map((config) => config.strategy)).toEqual([a, b]);
+          expect(
+            configs.every(
+              (config) =>
+                config.precision === precision &&
+                config.seed === input.config.seed &&
+                config.globalBatch === input.config.globalBatch &&
+                config.ranks === input.config.ranks,
+            ),
+          ).toBe(true);
+          const exported = createExport(
+            { ...run, config: configs[1] },
+            input,
+            {},
+          );
+          expect(exported.inputConfiguration.strategy).toBe(b);
+          expect(exported.assumptions.optimizer.masterParameters).toBe(
+            precision === "bf16-master",
+          );
+          expect(exported.assumptions.storageDtypes.activations).toBe(
+            precision === "fp32" ? "FP32" : "BF16",
+          );
+          expect(importExport(JSON.stringify(exported))).toEqual(input);
+        }
+  });
+
+  it("rejects malformed Explorer sessions and Explorer fields in standard sessions", () => {
+    const valid = {
+      config: defaultConfig,
+      compare: true,
+      scenario: "zero",
+      zeroPair: ["ddp", "zero3"],
+    };
+    for (const patch of [
+      { compare: false },
+      { zeroPair: ["zero1"] },
+      { zeroPair: ["zero1", "fsdp"] },
+      { config: { ...defaultConfig, strategy: "zero1" } },
+      { scenario: "strategies" },
+    ])
+      expect(() =>
+        decodeSession(
+          `?v=3&config=${encodeURIComponent(JSON.stringify({ ...valid, ...patch }))}`,
+        ),
+      ).toThrow();
+    for (const patch of [{ precision: "bf16-master" }, { strategy: "zero2" }])
+      expect(() =>
+        decodeSession(
+          `?v=3&config=${encodeURIComponent(JSON.stringify({ ...session, config: { ...defaultConfig, ...patch } }))}`,
+        ),
+      ).toThrow(/Explorer/);
   });
 
   it("exports workload-specific matrix and accumulation metadata", () => {
@@ -185,13 +287,13 @@ describe("versioned sharing", () => {
     };
     expect(() => encodeSession(input)).toThrow(/batch/i);
     expect(() =>
-      decodeSession(`?v=2&config=${encodeURIComponent(JSON.stringify(input))}`),
+      decodeSession(`?v=3&config=${encodeURIComponent(JSON.stringify(input))}`),
     ).toThrow(/batch/i);
   });
 
   it("rejects invalid versions and malformed queries without fallback", () => {
     for (const query of [
-      "?v=3&config={}",
+      "?v=4&config={}",
       "?v=1&config=nope",
       "?v=1&v=1&config={}",
       "?v=1",
@@ -215,7 +317,7 @@ describe("versioned sharing", () => {
     expect(() =>
       encodeSession({
         ...session,
-        scenario: "unknown" as SessionConfig["scenario"],
+        scenario: "unknown" as "strategies",
       }),
     ).toThrow(/scenario/i);
   });
@@ -241,7 +343,7 @@ describe("versioned sharing", () => {
   it("rejects incompatible or oversized imports before replay", () => {
     const exported = createExport(run, session, {});
     expect(() =>
-      importExport(JSON.stringify({ ...exported, schemaVersion: 3 })),
+      importExport(JSON.stringify({ ...exported, schemaVersion: 4 })),
     ).toThrow(/schema/);
     expect(() =>
       importExport(JSON.stringify({ ...exported, simulatorVersion: "0.1.0" })),

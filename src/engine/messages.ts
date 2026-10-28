@@ -29,9 +29,9 @@ export const engineMessages = {
     `${operationNames[kind]} ${layers.map((layer) => `L${layer + 1}`).join(" + ")}${rank === null ? "" : ` · Rank ${rank}`}`,
   modelAssumptions: {
     precision:
-      "FP32 storage for parameters, gradients, activations, and both Adam moments. No separate master parameters.",
+      "FP32 uses four-byte parameters, gradients, and activations, with no master copy. ZeRO Explorer also offers two-byte BF16 storage with a separate FP32 master and FP32 Adam moments.",
     arithmetic:
-      "Representative JavaScript arithmetic is separate from virtual tensor storage and does not emulate FP32 rounding.",
+      "Representative JavaScript arithmetic is separate from virtual tensor storage and does not emulate FP32 or BF16 rounding.",
     optimizer:
       "One bias-corrected Adam update. Moments are initialized eagerly. Gradients are cleared after their optimizer consumer finishes.",
     resources:
@@ -41,6 +41,6 @@ export const engineMessages = {
     aliases:
       "DDP buckets alias existing gradients. FSDP gathered parameters and reduced shards are separate buffers. TP reductions, PP transfers, and EP exchanges use explicit separate source and destination storage.",
     exclusions:
-      "No master weights, communication scratch, allocator caching, fragmentation, CPU offload, checkpointing, physical topology, or separate root-module policy. Targets and loss scalars are excluded. DDP/FSDP omit transient activation-gradient workspace; TP/PP/EP explicitly count communicated outputs and input gradients.",
+      "No communication scratch, allocator caching, fragmentation, CPU offload, checkpointing, physical topology, or separate root-module policy. Targets and loss scalars are excluded. DDP, ZeRO, and FSDP omit transient activation-gradient workspace; TP/PP/EP explicitly count communicated outputs and input gradients.",
   },
 } as const;

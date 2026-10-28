@@ -9,6 +9,7 @@ import type {
 import { collectiveCost, computeDuration } from "../cost";
 import { parameterOwnership } from "../ownership";
 import { engineMessages } from "../messages";
+import { optimizerRange, stateLayout } from "../state-layout";
 
 export interface Plan {
   operations: Operation[];
@@ -36,9 +37,11 @@ export interface OperationOptions {
   phaseTag?: Operation["phaseTag"];
   reduction?: Operation["reduction"];
   label?: string;
+  purpose?: Operation["purpose"];
 }
 
 export function createPlan(config: Config, layers: Layer[]) {
+  const layout = stateLayout(config);
   const plan: Plan = { operations: [], allocations: [], initial: [] };
   const ranks = Array.from({ length: config.ranks }, (_, rank) => rank);
   const previousCompute = new Map<number, string>();
@@ -51,7 +54,7 @@ export function createPlan(config: Config, layers: Layer[]) {
     return allocation.id;
   };
   for (const owner of parameterOwnership(config, layers)) {
-    const bytes = (owner.range[1] - owner.range[0]) * 4;
+    const bytes = (owner.range[1] - owner.range[0]) * layout.parameterBytes;
     const base = {
       ...owner,
       bytes,
@@ -70,17 +73,43 @@ export function createPlan(config: Config, layers: Layer[]) {
       },
       true,
     );
+    const range =
+      config.strategy === "zero1" || config.strategy === "zero2"
+        ? optimizerRange(config, layers[owner.layer].elements, owner.rank)
+        : owner.range;
+    const optimizerBase = {
+      ...base,
+      range,
+      ownership: layout.optimizerSharded ? ("shard" as const) : owner.ownership,
+    };
     allocate(
       {
-        ...base,
+        ...optimizerBase,
         id: bufferId("m", owner.layer, owner.rank),
         category: "optimizer",
-        bytes: bytes * 2,
+        bytes: (range[1] - range[0]) * layout.momentBytes,
         label: engineMessages.allocations.moments,
       },
       true,
     );
+    if (layout.masterBytes)
+      allocate(
+        {
+          ...optimizerBase,
+          id: bufferId("master", owner.layer, owner.rank),
+          category: "masterParameters",
+          bytes: (range[1] - range[0]) * layout.masterBytes,
+          label: "FP32 master parameters",
+        },
+        true,
+      );
   }
+
+  const optimizerReads = (layer: number, rank: number) => [
+    bufferId("p", layer, rank),
+    bufferId("m", layer, rank),
+    ...(layout.masterBytes ? [bufferId("master", layer, rank)] : []),
+  ];
 
   function operation(
     kind: OperationKind,
@@ -102,10 +131,13 @@ export function createPlan(config: Config, layers: Layer[]) {
     ].includes(kind);
     const elements = layerIds.reduce((sum, l) => sum + layers[l].elements, 0);
     const logicalBytes =
-      options.logicalBytes ?? (collective ? elements * 4 : 0);
+      options.logicalBytes ??
+      (collective
+        ? elements *
+          (kind === "all-gather" ? layout.parameterBytes : layout.gradientBytes)
+        : 0);
     const ownedElements =
-      kind === "adam" &&
-      (config.strategy === "fsdp" || config.strategy === "tp")
+      kind === "adam" && layout.optimizerSharded
         ? elements / config.ranks
         : elements;
     const cost = collective
@@ -164,6 +196,7 @@ export function createPlan(config: Config, layers: Layer[]) {
         options.transferredBytesPerRank ?? cost.transferredBytesPerRank,
       microbatch: options.microbatch,
       phaseTag: options.phaseTag,
+      purpose: options.purpose,
       reduction:
         options.reduction ??
         (kind === "all-reduce" || kind === "reduce-scatter"
@@ -182,5 +215,5 @@ export function createPlan(config: Config, layers: Layer[]) {
     plan.operations.push(op);
     return op;
   }
-  return { plan, ranks, allocate, operation };
+  return { plan, ranks, allocate, operation, optimizerReads };
 }

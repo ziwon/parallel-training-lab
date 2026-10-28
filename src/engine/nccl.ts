@@ -85,6 +85,6 @@ export function collectiveLink(
     url: url.toString(),
     operation: name,
     sizeMiB,
-    note: `${sizeMiB} MiB is the ${sizeMeaning}, converted from ${operation.logicalBytes} bytes. Both tools model FP32 storage. NCCL Lab uses illustrative scalar samples, not these training values.${routingNote} ${bandwidthNote} Its latency model is independent.`,
+    note: `${sizeMiB} MiB is the ${sizeMeaning}, converted from ${operation.logicalBytes} bytes. The payload uses this run's selected storage width. NCCL Lab uses illustrative scalar samples, not these training values.${routingNote} ${bandwidthNote} Its latency model is independent.`,
   };
 }
