@@ -66,11 +66,15 @@ npm run test:e2e
 
 ### Deploy to Cloudflare Pages
 
-The [live application](https://parallel-training-lab.pages.dev/) is deployed from this repository’s `main` branch. Pages Git integration is configured for automatic production builds and branch previews. To deploy your own copy, connect a separate Pages project to your repository with these settings:
+The [live application](https://parallel-training-lab.pages.dev/) deploys automatically when commits are pushed to `main`. Other branches receive Pages preview deployments.
+
+[GitHub Actions](.github/workflows/check.yml) runs type checking, unit tests, a production build, and Chromium end-to-end tests on pushes to `main` and pull requests, using Node.js 24. Cloudflare Pages independently runs `npm run check` and publishes only if that command succeeds; it does not wait for the GitHub Actions browser tests. The Pages Git integration requires no Cloudflare API token in GitHub Actions.
+
+To deploy your own copy, connect a separate Pages project to your repository with these settings:
 
 | Setting              | Value             |
 | -------------------- | ----------------- |
-| Build command        | `npm run build`   |
+| Build command        | `npm run check`   |
 | Output directory     | `dist`            |
 | Production branch    | `main`            |
 | Environment variable | `NODE_VERSION=24` |
