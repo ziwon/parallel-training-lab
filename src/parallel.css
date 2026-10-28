@@ -54,7 +54,7 @@
   margin-bottom: 10px;
 }
 .strategy-explanation p {
-  color: #b4c0c3;
+  color: var(--secondary);
   max-width: 60ch;
   font-size: 13px;
 }
@@ -96,8 +96,8 @@
   padding: 7px 3px;
   text-align: center;
   font-size: 10px;
-  border: 1px solid #4c6240;
-  background: #253020;
+  border: 1px solid var(--selected-border);
+  background: var(--green-dim);
   border-radius: 3px;
   color: #cce6b6;
 }
@@ -107,12 +107,12 @@
   margin-top: 2px;
 }
 .partition-cells .partition-absent {
-  color: #839295;
-  border-color: #30393b;
+  color: var(--subtle);
+  border-color: var(--line);
   background: transparent;
 }
 .partition-cells.tp .partition-owned {
-  background: #24343a;
+  background: var(--cyan-dim);
   border-color: #46646c;
   color: #b5dce3;
 }
@@ -172,15 +172,15 @@
   font-size: 11px;
 }
 ::selection {
-  background: #b5e87d;
-  color: #101313;
+  background: var(--lime);
+  color: var(--bg);
 }
 input,
 textarea {
   caret-color: var(--lime);
 }
 * {
-  scrollbar-color: #4e6062 #171c1d;
+  scrollbar-color: var(--control-border) var(--surface-inset);
   scrollbar-width: thin;
 }
 @media (max-width: 1250px) {
@@ -266,7 +266,7 @@ textarea {
 }
 .memory-plot svg text {
   font-size: 11px;
-  fill: #aabcc3;
+  fill: var(--secondary);
 }
 @media (max-width: 720px) {
   .scenario-heading-row {

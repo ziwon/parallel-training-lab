@@ -2,26 +2,28 @@
 name: Parallel Training Lab
 description: An inspectable scientific console for distributed training.
 colors:
-  bg: "#101313"
-  panel: "#171c1d"
-  surface: "#1c2223"
-  field: "#151a1b"
-  text: "#e6e9e7"
-  muted: "#93a2a7"
-  line: "#30393b"
-  lime: "#b5e87d"
-  cyan: "#82c8d4"
+  bg: "#121416"
+  panel: "#1b1f23"
+  surface: "#1b1f23"
+  surface-inset: "#15181b"
+  surface-raised: "#22272c"
+  field: "#1b1f23"
+  text: "#e6e9ed"
+  muted: "#a0aab6"
+  line: "#363e47"
+  lime: "#b2e879"
+  cyan: "#70c5d0"
   orange: "#e1ad7d"
   purple: "#b7a0dc"
   yellow: "#d8cf89"
   pink: "#d89dbd"
   scratch: "#94aaa8"
-  button: "#202729"
-  button-hover: "#2a3334"
-  primary-ink: "#1b2819"
-  primary-hover: "#c9f2a0"
-  nav-active: "#253121"
-  rank: "#1e2526"
+  button: "#22272c"
+  button-hover: "#2b3138"
+  primary-ink: "#1b2a0d"
+  primary-hover: "#c6f59b"
+  nav-active: "#243027"
+  rank: "#22272c"
 typography:
   headline:
     fontFamily: 'Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
@@ -90,19 +92,19 @@ components:
     rounded: "{rounded.control}"
     padding: "12px 9px"
   run-tag:
-    backgroundColor: "#26302f"
-    textColor: "#c0cfcb"
+    backgroundColor: "#22272c"
+    textColor: "#b6bfc9"
     rounded: "{rounded.cell}"
     padding: "4px 6px"
   rank-card:
     backgroundColor: "{colors.rank}"
     rounded: "{rounded.rank}"
   strategy-selected:
-    backgroundColor: "#2b3826"
+    backgroundColor: "#243027"
     textColor: "{colors.lime}"
     padding: "8px 9px"
   ownership-cell:
-    backgroundColor: "#253020"
+    backgroundColor: "#243027"
     textColor: "#cce6b6"
     rounded: "{rounded.cell}"
     padding: "7px 3px"
@@ -132,7 +134,7 @@ The captured reference set is `.impeccable/review/{tp,pp,ep}-{desktop,mobile}.pn
 
 ## Colors
 
-The palette combines charcoal surfaces with a soft lime interaction accent and desaturated scientific categories. Frontmatter records the actual source values; preview-only tonal ramps in the sidecar are not additional application tokens.
+The shared UI palette matches NCCL Lab: cool charcoal surfaces, slate text and borders, and lime/cyan accents. Training-specific scientific categories retain their distinct colors. Frontmatter records the actual source values; preview-only tonal ramps in the sidecar are not additional application tokens.
 
 ### Primary
 
@@ -153,8 +155,8 @@ The palette combines charcoal surfaces with a soft lime interaction accent and d
 ### Neutral
 
 - **Charcoal Canvas (`bg`):** page background.
-- **Panel Charcoal (`panel`) and Raised Charcoal (`surface`):** grouped work areas and nested inspector surfaces.
-- **Field Charcoal (`field`):** form controls and the sidebar/topbar family.
+- **Panel Charcoal (`panel` / `surface`) and Raised Charcoal (`surface-raised`):** grouped work areas and nested inspector surfaces.
+- **Field Charcoal (`field`):** form controls use the panel surface; the sidebar and topbar use `surface-inset` (`#15181b`).
 - **Soft White (`text`):** primary text; **Slate (`muted`)** for explanations, units, and secondary labels.
 - **Slate Border (`line`):** dividers and low-emphasis separation. More interactive containers use brighter related strokes from source.
 
@@ -199,9 +201,9 @@ Depth comes mainly from adjacent charcoal tones, one-pixel borders, and selected
 
 ### Shadow Vocabulary
 
-- **Sticky playback:** `0 5px 12px #10131340` separates controls from scrolled content.
-- **Selected rank:** `0 0 0 1px #9dbd7615` reinforces its brighter border.
-- **Selected tensor:** `inset 0 0 0 1px #b5e87d30` reinforces the selected allocation.
+- **Sticky playback:** `0 5px 12px #12141640` separates controls from scrolled content.
+- **Selected rank:** `0 0 0 1px #b2e87915` reinforces its brighter border.
+- **Selected tensor:** `inset 0 0 0 1px #b2e87930` reinforces the selected allocation.
 - **Selected timeline event:** `0 0 0 1px #edffd040` separates the focused event from dense adjacent events.
 - **Dialog:** `0 20px 120px #000b`, paired with a `#080e10bd` backdrop and 4px blur.
 
