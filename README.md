@@ -4,7 +4,7 @@ See what each GPU rank owns, computes, and waits for during one training step.
 
 Parallel Training Lab makes distributed training inspectable: follow parameters through forward and backward passes, watch communication unlock the next operation, and see why memory rises and falls. Explore **DDP, FSDP, TP, PP, and EP** entirely in your browser. No GPU, CUDA, model downloads, or backend required.
 
-**[Run locally](#run-locally)** · [Compare the strategies](#supported-strategies) · [Model reference](docs/model.md) · [NCCL Lab](https://nccl-lab.pages.dev/)
+**[Open Parallel Training Lab](https://parallel-lab.pages.dev/)** · [Run locally](#run-locally) · [Model reference](docs/model.md) · [NCCL Lab](https://nccl-lab.pages.dev/)
 
 [![Four FSDP ranks at the start of a parameter all-gather. Each rank owns a shard and reserves a temporary full-layer buffer; the inspector explains the dependency and the timeline shows the training step.](assets/readme/fsdp-all-gather.png)](assets/readme/fsdp-all-gather.png)
 
@@ -12,7 +12,7 @@ _Four-rank FSDP, paused as the first all-gather starts. Gathered buffers occupy 
 
 ## Follow your first training step
 
-1. [Start the app](#run-locally), select **FSDP**, and keep four ranks with a global batch of 32.
+1. [Open the app](https://parallel-lab.pages.dev/), select **FSDP**, and keep four ranks with a global batch of 32.
 2. Select the first **AG** event and choose **Jump to start**. Each rank still owns a parameter shard, but now reserves a complete layer buffer.
 3. Step forward. The layer waits for all-gather to finish; backward later produces gradients that reduce-scatter returns to their owners. Adam updates the owned parameters.
 4. Open **DDP vs. FSDP** from **All 7 comparisons**. Both runs use the same training problem. Compare their ownership, communication, and memory peaks, then inspect the numerical result.
@@ -41,9 +41,11 @@ DDP, FSDP, TP, and PP share the same four-layer dense problem. EP uses a separat
 
 ## Run locally
 
-Use Node.js 24 and npm. From the project directory:
+Use Node.js 24 and npm:
 
 ```sh
+git clone https://github.com/ziwon/parallel-lab.git
+cd parallel-lab
 npm ci
 npm run dev
 ```
@@ -64,15 +66,16 @@ npm run test:e2e
 
 ### Deploy to Cloudflare Pages
 
-Create a separate Pages project for this application with these settings:
+The [live application](https://parallel-lab.pages.dev/) is hosted on Cloudflare Pages. Pushes to this repository’s `main` branch trigger production builds; other branches create preview deployments. To deploy your own copy, connect a separate Pages project to your repository with these settings:
 
 | Setting              | Value             |
 | -------------------- | ----------------- |
 | Build command        | `npm run build`   |
 | Output directory     | `dist`            |
+| Production branch    | `main`            |
 | Environment variable | `NODE_VERSION=24` |
 
-Review the preview deployment before publishing. Any static host can serve the build; there are no server routes or runtime secrets. See Cloudflare’s [React deployment guide](https://developers.cloudflare.com/pages/framework-guides/deploy-a-react-site/).
+Review branch previews before merging to `main`. The checked-in `wrangler.jsonc` records the Pages project name and output directory; change the name for your own project. Any static host can serve the build; there are no server routes or runtime secrets. See Cloudflare’s [React deployment guide](https://developers.cloudflare.com/pages/framework-guides/deploy-a-react-site/).
 
 ## Understand the model’s limits
 
