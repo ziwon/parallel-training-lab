@@ -7,7 +7,6 @@ import {
   type ReactNode,
 } from "react";
 import {
-  Activity,
   ArrowLeftRight,
   BookOpen,
   Check,
@@ -59,6 +58,7 @@ const initialFocus: Focus = {
   category: null,
   operation: null,
 };
+const explorationTopics = ["ddp", "zero", "fsdp", "tp", "pp", "ep"] as const;
 const scenarioIcons = {
   strategies: ArrowLeftRight,
   reshard: Layers3,
@@ -394,19 +394,49 @@ export default function App() {
             <small>{t.title}</small>
           </div>
         </div>
-        <nav aria-label={t.workspace}>
-          <button
-            className={!session.compare ? "active" : ""}
-            onClick={() => {
-              updateSession(standardSession(false));
-              setNavigation(false);
-            }}
-          >
-            <Activity size={17} />
-            {t.simulator}
-          </button>
+        <div className="sidebar-section-label" id="explore-heading">
+          {t.exploreNav}
+        </div>
+        <nav className="sidebar-strategies" aria-labelledby="explore-heading">
+          {explorationTopics.map((topic) => {
+            const selected =
+              topic === "zero"
+                ? isZero
+                : session.config.strategy === topic && !session.compare;
+            return (
+              <button
+                key={topic}
+                className={selected ? "chosen" : ""}
+                aria-current={selected ? "page" : undefined}
+                onClick={() => {
+                  if (topic === "zero") chooseZero();
+                  else {
+                    updateSession(standardSession(false, "strategies", topic));
+                    setNavigation(false);
+                  }
+                }}
+              >
+                <Layers3 size={17} />
+                <span>
+                  {topic === "zero" ? t.zeroNav : t.strategies[topic]}
+                  <small>
+                    {topic === "zero"
+                      ? t.zeroNavDescription
+                      : t.strategyShort[topic]}
+                  </small>
+                </span>
+                {selected && <span className="status-dot" />}
+              </button>
+            );
+          })}
+        </nav>
+        <div className="sidebar-section-label" id="tools-heading">
+          {t.tools}
+        </div>
+        <nav aria-labelledby="tools-heading">
           <button
             className={session.compare && !isZero ? "active" : ""}
+            aria-current={session.compare && !isZero ? "page" : undefined}
             onClick={() => {
               updateSession(standardSession(true));
               setNavigation(false);
@@ -414,10 +444,6 @@ export default function App() {
           >
             <ArrowLeftRight size={17} />
             {t.compare}
-          </button>
-          <button className={isZero ? "active" : ""} onClick={chooseZero}>
-            <Layers3 size={17} />
-            {t.zeroTitle}
           </button>
           <button
             onClick={() => {
@@ -429,32 +455,6 @@ export default function App() {
             {t.guide}
           </button>
         </nav>
-        <div className="sidebar-section-label">{t.strategy}</div>
-        <div className="sidebar-strategies">
-          {strategies.map((strategy) => (
-            <button
-              key={strategy}
-              className={
-                session.config.strategy === strategy && !session.compare
-                  ? "chosen"
-                  : ""
-              }
-              onClick={() => {
-                updateSession(standardSession(false, "strategies", strategy));
-                setNavigation(false);
-              }}
-            >
-              <Layers3 size={17} />
-              <span>
-                {t.strategies[strategy]}
-                <small>{t.strategyShort[strategy]}</small>
-              </span>
-              {session.config.strategy === strategy && !session.compare && (
-                <span className="status-dot" />
-              )}
-            </button>
-          ))}
-        </div>
         <div className="sidebar-note">
           <div className="mini-ranks">
             {[0, 1, 2, 3].map((r) => (
@@ -468,10 +468,6 @@ export default function App() {
               ? t.zeroIdentity
               : t.strategyExplain[session.config.strategy]}
           </p>
-          <button onClick={() => setGuide(true)}>
-            {t.guide}
-            <ArrowLeftRight size={12} />
-          </button>
         </div>
         <div className="sidebar-bottom">
           <a

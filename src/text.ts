@@ -8,6 +8,10 @@ export const text = {
   subtitle:
     "Five ways to distribute one training step. Follow what each rank owns and does.",
   simulator: "Training simulator",
+  exploreNav: "Explore",
+  tools: "Tools",
+  zeroNav: "ZeRO",
+  zeroNavDescription: "Shard state in stages",
   compare: "Compare runs",
   guide: "Model & assumptions",
   browserOnly: "Runs in your browser",

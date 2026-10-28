@@ -331,6 +331,9 @@ nav button.active {
   color: var(--muted);
   margin: 35px 10px 13px;
 }
+.workspace-label + .sidebar-section-label {
+  margin-top: 0;
+}
 .sidebar-strategies {
   display: grid;
   gap: 9px;

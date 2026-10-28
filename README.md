@@ -33,7 +33,7 @@ DDP, FSDP, TP, and PP share the same four-layer dense problem. EP uses a separat
 
 ## Compare ZeRO stages
 
-Open **ZeRO Stage Explorer** and select any two of DDP, ZeRO-1, ZeRO-2, and ZeRO-3. Both runs share the workload, seed, batch, ranks, and storage profile. The four-stage summary separates parameters, gradients, FP32 master weights, and Adam moments. The existing ownership, memory ledger, and timeline show the allocations as the step runs.
+Select **ZeRO** under **Explore** to open the **ZeRO Stage Explorer**, then select any two of DDP, ZeRO-1, ZeRO-2, and ZeRO-3. Both runs share the workload, seed, batch, ranks, and storage profile. The four-stage summary separates parameters, gradients, FP32 master weights, and Adam moments. The existing ownership, memory ledger, and timeline show the allocations as the step runs.
 
 Choose **FP32** for `4 + 4 + 0 + 8` bytes per parameter, or **BF16 + FP32 master** for `2 + 2 + 4 + 8`. Both start at 16 bytes per parameter before sharding. The summary includes gradients and excludes activations and temporary buffers, so it differs from initial and peak allocated memory.
 

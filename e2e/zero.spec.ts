@@ -5,7 +5,8 @@ import type { Operation } from "../src/engine/types";
 test.beforeEach(async ({ page }) => {
   await page.goto("/");
   await page
-    .getByRole("button", { name: "ZeRO Stage Explorer", exact: true })
+    .getByRole("navigation", { name: "Explore", exact: true })
+    .getByRole("button", { name: /^ZeRO / })
     .click();
   await expect(
     page.getByRole("heading", { name: "ZeRO Stage Explorer", exact: true }),
@@ -158,7 +159,8 @@ test("shares and round-trips the selected pair and profile, then cleanly leaves 
     1e-10,
   );
   await page
-    .getByRole("button", { name: "Training simulator", exact: true })
+    .getByRole("navigation", { name: "Explore", exact: true })
+    .getByRole("button", { name: /^DDP / })
     .click();
   await expect(page.getByRole("article")).toHaveCount(1);
   await expect(page.locator(".batch-identity")).toContainText("FP32 Adam");
