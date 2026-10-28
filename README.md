@@ -66,7 +66,7 @@ npm run test:e2e
 
 ### Deploy to Cloudflare Pages
 
-The [live application](https://parallel-lab.pages.dev/) is hosted on Cloudflare Pages. Pushes to this repository’s `main` branch trigger production builds; other branches create preview deployments. To deploy your own copy, connect a separate Pages project to your repository with these settings:
+The [live application](https://parallel-lab.pages.dev/) is deployed from this repository’s `main` branch. Pages Git integration is configured for automatic production builds and branch previews. To deploy your own copy, connect a separate Pages project to your repository with these settings:
 
 | Setting              | Value             |
 | -------------------- | ----------------- |
@@ -76,6 +76,15 @@ The [live application](https://parallel-lab.pages.dev/) is hosted on Cloudflare 
 | Environment variable | `NODE_VERSION=24` |
 
 Review branch previews before merging to `main`. The checked-in `wrangler.jsonc` records the Pages project name and output directory; change the name for your own project. Any static host can serve the build; there are no server routes or runtime secrets. See Cloudflare’s [React deployment guide](https://developers.cloudflare.com/pages/framework-guides/deploy-a-react-site/).
+
+For a manual production deployment, authenticate Wrangler with the project’s Cloudflare account, then run:
+
+```sh
+npm run build
+npx wrangler@4 pages deploy dist --project-name parallel-lab --branch main
+```
+
+Use your own project name when deploying a fork. If a push does not start a build, check the Cloudflare GitHub App’s repository access and Pages deployment settings, or trigger a deployment from the dashboard.
 
 ## Understand the model’s limits
 
