@@ -1,0 +1,36 @@
+{
+  "name": "parallel-viz",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "check": "npm run typecheck && npm test && npm run build",
+    "format": "prettier --write src tests e2e docs *.ts *.json *.html README.md",
+    "format:check": "prettier --check src tests e2e docs *.ts *.json *.html README.md"
+  },
+  "dependencies": {
+    "lucide-react": "^0.468.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "prettier": "3.9.10",
+    "typescript": "~5.9.3",
+    "vite": "8.3.5",
+    "vitest": "5.0.5"
+  }
+}

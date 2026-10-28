@@ -1,0 +1,11 @@
+node_modules/
+dist/
+test-results/
+playwright-report/
+.audit/
+.impeccable/review/
+.impeccable/hook.cache.json
+.wrangler/
+.dev.vars*
+.env*
+!.env.example

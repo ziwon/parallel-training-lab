@@ -1,0 +1,283 @@
+.scenario-heading {
+  font-size: 13px;
+  font-weight: 550;
+  margin-bottom: 12px;
+  color: var(--muted);
+}
+.scenario-grid {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+}
+.scenario-button {
+  min-width: 187px;
+  flex: 1 0 187px;
+  padding: 13px;
+}
+.scenario-button > svg:last-child {
+  display: none;
+}
+.configuration-strip {
+  display: grid;
+  grid-template-columns: minmax(245px, 1.5fr) 115px 125px auto;
+  gap: 14px;
+}
+.configuration-strip .batch-identity {
+  grid-column: 1 / 4;
+  grid-row: 2;
+}
+.configuration-strip .configure-button {
+  grid-column: 4;
+  grid-row: 1 / 3;
+}
+.strategy-toggle > button {
+  flex: 1;
+  padding-inline: 9px;
+}
+.strategy-overview {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.75fr) minmax(0, 1.25fr);
+  gap: 34px;
+  padding: 25px 0 30px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 22px;
+}
+.strategy-explanation {
+  align-self: center;
+}
+.strategy-explanation h2 {
+  font-size: 23px;
+  font-weight: 580;
+  letter-spacing: -0.02em;
+  margin-bottom: 10px;
+}
+.strategy-explanation p {
+  color: #b4c0c3;
+  max-width: 60ch;
+  font-size: 13px;
+}
+.workload-tag {
+  display: inline-block;
+  color: var(--lime);
+  font-size: 11px;
+  margin-top: 14px;
+  margin-right: 12px;
+}
+.partition-map {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 20px;
+  align-content: center;
+}
+.partition-rank {
+  min-width: 0;
+}
+.partition-rank > strong {
+  font-size: 11px;
+  font-weight: 550;
+  display: block;
+  margin-bottom: 6px;
+}
+.partition-rank > small {
+  color: var(--muted);
+  font-size: 10px;
+  display: block;
+  margin-top: 6px;
+}
+.partition-cells {
+  display: flex;
+  gap: 3px;
+}
+.partition-cells > span {
+  min-width: 0;
+  flex: 1;
+  padding: 7px 3px;
+  text-align: center;
+  font-size: 10px;
+  border: 1px solid #4c6240;
+  background: #253020;
+  border-radius: 3px;
+  color: #cce6b6;
+}
+.partition-cells small {
+  display: block;
+  font-size: 9px;
+  margin-top: 2px;
+}
+.partition-cells .partition-absent {
+  color: #839295;
+  border-color: #30393b;
+  background: transparent;
+}
+.partition-cells.tp .partition-owned {
+  background: #24343a;
+  border-color: #46646c;
+  color: #b5dce3;
+}
+.partition-cells.pp .partition-owned {
+  background: #3b3024;
+  border-color: #786248;
+  color: #ebc6a3;
+}
+.partition-cells.ep {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+}
+.partition-cells.ep .partition-owned {
+  background: #382b3c;
+  border-color: #715a78;
+  color: #dec3e3;
+}
+.partition-caption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  grid-column: 1/-1;
+  font-size: 11px;
+  color: var(--muted);
+  padding-top: 8px;
+}
+.partition-caption svg {
+  flex-shrink: 0;
+}
+.expert-flow {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.expert-flow .flow-end {
+  display: none;
+}
+.expert-flow .layer-unit {
+  flex: 1 1 20%;
+}
+.kind-send-recv {
+  background: #3f3d26;
+  color: #e8dfa8;
+}
+.kind-all-to-all {
+  background: #423144;
+  color: #e3b9df;
+}
+.operation-context {
+  font-size: 11px;
+  color: var(--cyan);
+  margin-top: 8px;
+}
+.sidebar-note {
+  margin-top: 18px;
+}
+.sidebar-note p {
+  font-size: 11px;
+}
+::selection {
+  background: #b5e87d;
+  color: #101313;
+}
+input,
+textarea {
+  caret-color: var(--lime);
+}
+* {
+  scrollbar-color: #4e6062 #171c1d;
+  scrollbar-width: thin;
+}
+@media (max-width: 1250px) {
+  .strategy-overview {
+    gap: 22px;
+    grid-template-columns: minmax(190px, 0.7fr) minmax(0, 1.3fr);
+  }
+  .partition-cells.ep {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@media (max-width: 720px) {
+  .configuration-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .configuration-strip > .field:first-child {
+    grid-column: 1/-1;
+  }
+  .configuration-strip > .field:nth-child(2),
+  .configuration-strip > .field:nth-child(3) {
+    grid-column: auto;
+  }
+  .configuration-strip .batch-identity {
+    grid-column: 1/-1;
+    grid-row: auto;
+  }
+  .configuration-strip .configure-button {
+    grid-column: 1/-1;
+    grid-row: auto;
+  }
+  .strategy-overview {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+    padding-top: 12px;
+  }
+  .strategy-explanation h2 {
+    font-size: 22px;
+  }
+  .partition-map {
+    gap: 12px;
+  }
+  .partition-cells > span {
+    padding: 6px 2px;
+  }
+  .scenario-button {
+    min-width: 175px;
+    flex-basis: 175px;
+  }
+  .scenario-grid {
+    margin-right: -4px;
+  }
+  .expert-flow .layer-unit {
+    flex-basis: 40%;
+  }
+}
+
+.run-batch-description {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 0 0 15px;
+}
+
+.scenario-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+.scenario-heading-row .scenario-heading {
+  margin: 0;
+}
+.scenario-picker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.scenario-picker select {
+  width: 185px;
+  font-size: 11px;
+}
+.memory-plot svg text {
+  font-size: 11px;
+  fill: #aabcc3;
+}
+@media (max-width: 720px) {
+  .scenario-heading-row {
+    align-items: flex-start;
+  }
+  .scenario-picker {
+    flex-direction: column;
+    gap: 5px;
+    align-items: flex-start;
+  }
+  .scenario-picker select {
+    width: 170px;
+  }
+}

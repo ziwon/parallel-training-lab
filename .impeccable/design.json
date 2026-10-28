@@ -1,0 +1,480 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-27T23:39:04.083333+00:00",
+  "title": "Design System: Parallel Training Lab",
+  "extensions": {
+    "colorMeta": {
+      "bg": {
+        "role": "neutral",
+        "displayName": "Charcoal Canvas",
+        "tonalRamp": [
+          "oklch(15.00% 0.0047 196.75)",
+          "oklch(26.43% 0.0047 196.75)",
+          "oklch(37.86% 0.0047 196.75)",
+          "oklch(49.29% 0.0047 196.75)",
+          "oklch(60.71% 0.0047 196.75)",
+          "oklch(72.14% 0.0047 196.75)",
+          "oklch(83.57% 0.0047 196.75)",
+          "oklch(95.00% 0.0047 196.75)"
+        ]
+      },
+      "panel": {
+        "role": "neutral",
+        "displayName": "Panel Charcoal",
+        "tonalRamp": [
+          "oklch(15.00% 0.0077 211.07)",
+          "oklch(26.43% 0.0077 211.07)",
+          "oklch(37.86% 0.0077 211.07)",
+          "oklch(49.29% 0.0077 211.07)",
+          "oklch(60.71% 0.0077 211.07)",
+          "oklch(72.14% 0.0077 211.07)",
+          "oklch(83.57% 0.0077 211.07)",
+          "oklch(95.00% 0.0077 211.07)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Raised Charcoal",
+        "tonalRamp": [
+          "oklch(15.00% 0.0089 208.75)",
+          "oklch(26.43% 0.0089 208.75)",
+          "oklch(37.86% 0.0089 208.75)",
+          "oklch(49.29% 0.0089 208.75)",
+          "oklch(60.71% 0.0089 208.75)",
+          "oklch(72.14% 0.0089 208.75)",
+          "oklch(83.57% 0.0089 208.75)",
+          "oklch(95.00% 0.0089 208.75)"
+        ]
+      },
+      "field": {
+        "role": "neutral",
+        "displayName": "Field Charcoal",
+        "tonalRamp": [
+          "oklch(15.00% 0.0078 211.08)",
+          "oklch(26.43% 0.0078 211.08)",
+          "oklch(37.86% 0.0078 211.08)",
+          "oklch(49.29% 0.0078 211.08)",
+          "oklch(60.71% 0.0078 211.08)",
+          "oklch(72.14% 0.0078 211.08)",
+          "oklch(83.57% 0.0078 211.08)",
+          "oklch(95.00% 0.0078 211.08)"
+        ]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Soft White",
+        "tonalRamp": [
+          "oklch(15.00% 0.0042 157.17)",
+          "oklch(26.43% 0.0042 157.17)",
+          "oklch(37.86% 0.0042 157.17)",
+          "oklch(49.29% 0.0042 157.17)",
+          "oklch(60.71% 0.0042 157.17)",
+          "oklch(72.14% 0.0042 157.17)",
+          "oklch(83.57% 0.0042 157.17)",
+          "oklch(95.00% 0.0042 157.17)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Slate",
+        "tonalRamp": [
+          "oklch(15.00% 0.0185 219.73)",
+          "oklch(26.43% 0.0185 219.73)",
+          "oklch(37.86% 0.0185 219.73)",
+          "oklch(49.29% 0.0185 219.73)",
+          "oklch(60.71% 0.0185 219.73)",
+          "oklch(72.14% 0.0185 219.73)",
+          "oklch(83.57% 0.0185 219.73)",
+          "oklch(95.00% 0.0185 219.73)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Slate Border",
+        "tonalRamp": [
+          "oklch(15.00% 0.0126 212.61)",
+          "oklch(26.43% 0.0126 212.61)",
+          "oklch(37.86% 0.0126 212.61)",
+          "oklch(49.29% 0.0126 212.61)",
+          "oklch(60.71% 0.0126 212.61)",
+          "oklch(72.14% 0.0126 212.61)",
+          "oklch(83.57% 0.0126 212.61)",
+          "oklch(95.00% 0.0126 212.61)"
+        ]
+      },
+      "lime": {
+        "role": "primary",
+        "displayName": "Signal Lime",
+        "tonalRamp": [
+          "oklch(15.00% 0.1465 129.88)",
+          "oklch(26.43% 0.1465 129.88)",
+          "oklch(37.86% 0.1465 129.88)",
+          "oklch(49.29% 0.1465 129.88)",
+          "oklch(60.71% 0.1465 129.88)",
+          "oklch(72.14% 0.1465 129.88)",
+          "oklch(83.57% 0.1465 129.88)",
+          "oklch(95.00% 0.1465 129.88)"
+        ]
+      },
+      "cyan": {
+        "role": "secondary",
+        "displayName": "Tensor Cyan",
+        "tonalRamp": [
+          "oklch(15.00% 0.0722 209.43)",
+          "oklch(26.43% 0.0722 209.43)",
+          "oklch(37.86% 0.0722 209.43)",
+          "oklch(49.29% 0.0722 209.43)",
+          "oklch(60.71% 0.0722 209.43)",
+          "oklch(72.14% 0.0722 209.43)",
+          "oklch(83.57% 0.0722 209.43)",
+          "oklch(95.00% 0.0722 209.43)"
+        ]
+      },
+      "orange": {
+        "role": "secondary",
+        "displayName": "Gradient Apricot",
+        "tonalRamp": [
+          "oklch(15.00% 0.0878 63.70)",
+          "oklch(26.43% 0.0878 63.70)",
+          "oklch(37.86% 0.0878 63.70)",
+          "oklch(49.29% 0.0878 63.70)",
+          "oklch(60.71% 0.0878 63.70)",
+          "oklch(72.14% 0.0878 63.70)",
+          "oklch(83.57% 0.0878 63.70)",
+          "oklch(95.00% 0.0878 63.70)"
+        ]
+      },
+      "purple": {
+        "role": "tertiary",
+        "displayName": "Optimizer Lavender",
+        "tonalRamp": [
+          "oklch(15.00% 0.0882 301.86)",
+          "oklch(26.43% 0.0882 301.86)",
+          "oklch(37.86% 0.0882 301.86)",
+          "oklch(49.29% 0.0882 301.86)",
+          "oklch(60.71% 0.0882 301.86)",
+          "oklch(72.14% 0.0882 301.86)",
+          "oklch(83.57% 0.0882 301.86)",
+          "oklch(95.00% 0.0882 301.86)"
+        ]
+      },
+      "yellow": {
+        "role": "tertiary",
+        "displayName": "Activation Straw",
+        "tonalRamp": [
+          "oklch(15.00% 0.0904 101.83)",
+          "oklch(26.43% 0.0904 101.83)",
+          "oklch(37.86% 0.0904 101.83)",
+          "oklch(49.29% 0.0904 101.83)",
+          "oklch(60.71% 0.0904 101.83)",
+          "oklch(72.14% 0.0904 101.83)",
+          "oklch(83.57% 0.0904 101.83)",
+          "oklch(95.00% 0.0904 101.83)"
+        ]
+      },
+      "pink": {
+        "role": "tertiary",
+        "displayName": "Buffer Rose",
+        "tonalRamp": [
+          "oklch(15.00% 0.0814 345.48)",
+          "oklch(26.43% 0.0814 345.48)",
+          "oklch(37.86% 0.0814 345.48)",
+          "oklch(49.29% 0.0814 345.48)",
+          "oklch(60.71% 0.0814 345.48)",
+          "oklch(72.14% 0.0814 345.48)",
+          "oklch(83.57% 0.0814 345.48)",
+          "oklch(95.00% 0.0814 345.48)"
+        ]
+      },
+      "scratch": {
+        "role": "tertiary",
+        "displayName": "Scratch Sage",
+        "tonalRamp": [
+          "oklch(15.00% 0.0247 189.94)",
+          "oklch(26.43% 0.0247 189.94)",
+          "oklch(37.86% 0.0247 189.94)",
+          "oklch(49.29% 0.0247 189.94)",
+          "oklch(60.71% 0.0247 189.94)",
+          "oklch(72.14% 0.0247 189.94)",
+          "oklch(83.57% 0.0247 189.94)",
+          "oklch(95.00% 0.0247 189.94)"
+        ]
+      },
+      "button": {
+        "role": "neutral",
+        "displayName": "Button Charcoal",
+        "tonalRamp": [
+          "oklch(15.00% 0.0106 216.87)",
+          "oklch(26.43% 0.0106 216.87)",
+          "oklch(37.86% 0.0106 216.87)",
+          "oklch(49.29% 0.0106 216.87)",
+          "oklch(60.71% 0.0106 216.87)",
+          "oklch(72.14% 0.0106 216.87)",
+          "oklch(83.57% 0.0106 216.87)",
+          "oklch(95.00% 0.0106 216.87)"
+        ]
+      },
+      "button-hover": {
+        "role": "neutral",
+        "displayName": "Button Hover Charcoal",
+        "tonalRamp": [
+          "oklch(15.00% 0.0124 204.75)",
+          "oklch(26.43% 0.0124 204.75)",
+          "oklch(37.86% 0.0124 204.75)",
+          "oklch(49.29% 0.0124 204.75)",
+          "oklch(60.71% 0.0124 204.75)",
+          "oklch(72.14% 0.0124 204.75)",
+          "oklch(83.57% 0.0124 204.75)",
+          "oklch(95.00% 0.0124 204.75)"
+        ]
+      },
+      "primary-ink": {
+        "role": "primary",
+        "displayName": "Primary Ink",
+        "tonalRamp": [
+          "oklch(15.00% 0.0328 141.25)",
+          "oklch(26.43% 0.0328 141.25)",
+          "oklch(37.86% 0.0328 141.25)",
+          "oklch(49.29% 0.0328 141.25)",
+          "oklch(60.71% 0.0328 141.25)",
+          "oklch(72.14% 0.0328 141.25)",
+          "oklch(83.57% 0.0328 141.25)",
+          "oklch(95.00% 0.0328 141.25)"
+        ]
+      },
+      "primary-hover": {
+        "role": "primary",
+        "displayName": "Primary Hover Lime",
+        "tonalRamp": [
+          "oklch(15.00% 0.1148 130.01)",
+          "oklch(26.43% 0.1148 130.01)",
+          "oklch(37.86% 0.1148 130.01)",
+          "oklch(49.29% 0.1148 130.01)",
+          "oklch(60.71% 0.1148 130.01)",
+          "oklch(72.14% 0.1148 130.01)",
+          "oklch(83.57% 0.1148 130.01)",
+          "oklch(95.00% 0.1148 130.01)"
+        ]
+      },
+      "nav-active": {
+        "role": "primary",
+        "displayName": "Active Navigation Green",
+        "tonalRamp": [
+          "oklch(15.00% 0.0326 137.99)",
+          "oklch(26.43% 0.0326 137.99)",
+          "oklch(37.86% 0.0326 137.99)",
+          "oklch(49.29% 0.0326 137.99)",
+          "oklch(60.71% 0.0326 137.99)",
+          "oklch(72.14% 0.0326 137.99)",
+          "oklch(83.57% 0.0326 137.99)",
+          "oklch(95.00% 0.0326 137.99)"
+        ]
+      },
+      "rank": {
+        "role": "neutral",
+        "displayName": "Rank Charcoal",
+        "tonalRamp": [
+          "oklch(15.00% 0.0102 207.05)",
+          "oklch(26.43% 0.0102 207.05)",
+          "oklch(37.86% 0.0102 207.05)",
+          "oklch(49.29% 0.0102 207.05)",
+          "oklch(60.71% 0.0102 207.05)",
+          "oklch(72.14% 0.0102 207.05)",
+          "oklch(83.57% 0.0102 207.05)",
+          "oklch(95.00% 0.0102 207.05)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Page headline",
+        "purpose": "Main workspace title; smaller at narrow breakpoints."
+      },
+      "title": {
+        "displayName": "Strategy title",
+        "purpose": "Plain-language ownership explanation heading."
+      },
+      "body": {
+        "displayName": "Explanatory body",
+        "purpose": "English instructional copy, up to 60ch in the strategy overview."
+      },
+      "label": {
+        "displayName": "Compact label",
+        "purpose": "Controls and panel labels."
+      },
+      "metric": {
+        "displayName": "Metric",
+        "purpose": "Tabular modeled results, with separate units."
+      },
+      "mono": {
+        "displayName": "Numerical mono",
+        "purpose": "Arithmetic samples, identifiers, and memory-chart readings."
+      }
+    },
+    "shadows": [
+      {
+        "name": "playback",
+        "value": "0 5px 12px #10131340",
+        "purpose": "Sticky playback separation."
+      },
+      {
+        "name": "rank-selected",
+        "value": "0 0 0 1px #9dbd7615",
+        "purpose": "Selected rank border reinforcement."
+      },
+      {
+        "name": "tensor-selected",
+        "value": "inset 0 0 0 1px #b5e87d30",
+        "purpose": "Selected tensor reinforcement."
+      },
+      {
+        "name": "event-selected",
+        "value": "0 0 0 1px #edffd040",
+        "purpose": "Selected timeline event reinforcement."
+      },
+      {
+        "name": "dialog",
+        "value": "0 20px 120px #000b",
+        "purpose": "Modal depth over a dark blurred backdrop."
+      }
+    ],
+    "motion": [
+      {
+        "name": "rank-border",
+        "value": "border-color 0.12s",
+        "purpose": "Rank-card selection transition."
+      },
+      {
+        "name": "mobile-drawer",
+        "value": "transform 0.2s",
+        "purpose": "Mobile navigation reveal."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "transition: none !important; animation: none !important; scroll-behavior: auto !important",
+        "purpose": "Applied under prefers-reduced-motion: reduce."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "wide",
+        "value": "1700px"
+      },
+      {
+        "name": "compact-desktop",
+        "value": "1250px"
+      },
+      {
+        "name": "stacked-inspector",
+        "value": "1000px"
+      },
+      {
+        "name": "mobile",
+        "value": "720px"
+      },
+      {
+        "name": "narrow-mobile",
+        "value": "380px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Lime primary action, with the source hover and keyboard-focus treatments.",
+      "html": "<button class=\"ds-primary\">Apply configuration</button>",
+      "css": ".ds-primary{font-family:Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;font-size:13px;line-height:1.25;display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--line,#30393b);border-radius:5px;padding:8px 11px;cursor:pointer;background:var(--lime,#b5e87d);border-color:var(--lime,#b5e87d);color:#1b2819;font-weight:650}.ds-primary:hover:not(:disabled){background:#c9f2a0;border-color:#526263}.ds-primary:focus-visible{outline:2px solid var(--lime,#b5e87d);outline-offset:3px;}.ds-primary:disabled{opacity:.35;cursor:default}"
+    },
+    {
+      "name": "Secondary button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Compact secondary action shared by configuration and inspection.",
+      "html": "<button class=\"ds-secondary\">Jump to start</button>",
+      "css": ".ds-secondary{font-family:Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;font-size:13px;line-height:1.25;display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--line,#30393b);border-radius:5px;padding:8px 11px;cursor:pointer;background:#202729;color:#e6e9e7}.ds-secondary:hover:not(:disabled){background:#2a3334;border-color:#526263}.ds-secondary:focus-visible{outline:2px solid var(--lime,#b5e87d);outline-offset:3px;}.ds-secondary:disabled{opacity:.35;cursor:default}"
+    },
+    {
+      "name": "Labeled number field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "Native number input with a visible label and tabular numerals.",
+      "html": "<label class=\"ds-field\"><span>Seed</span><input type=\"number\" value=\"42\"></label>",
+      "css": ".ds-field{display:grid;gap:7px;max-width:220px;font-family:Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;font-size:11px}.ds-field>span{color:#adbcc0;font-size:10px}.ds-field input{height:36px;min-width:0;padding:9px 10px;color:#e6e9e7;background:#151a1b;border:1px solid #445052;border-radius:5px;font:inherit;font-variant-numeric:tabular-nums;caret-color:var(--lime,#b5e87d)}.ds-field input:focus-visible{outline:2px solid var(--lime,#b5e87d);outline-offset:3px;}"
+    },
+    {
+      "name": "Sidebar navigation",
+      "kind": "nav",
+      "refersTo": "nav-active",
+      "description": "Active task and subdued neighboring task in the persistent navigation.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Workspace\"><button class=\"ds-active\" aria-current=\"page\"><svg width=\"17\" height=\"17\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><path d=\"M22 12h-4l-3 9L9 3l-3 9H2\"/></svg>Training simulator</button><button>Compare runs</button></nav>",
+      "css": ".ds-nav{display:grid;gap:6px;width:190px;font-family:Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif}.ds-nav button{display:flex;align-items:center;gap:9px;justify-content:flex-start;padding:12px 9px;border:1px solid transparent;border-radius:5px;background:transparent;color:#b4c0c4;font:inherit;font-size:11px;cursor:pointer}.ds-nav .ds-active{background:#253121;border-color:#3d5135;color:var(--lime,#b5e87d)}.ds-nav button:hover{background:#2a3334;border-color:#526263}.ds-nav button:focus-visible{outline:2px solid var(--lime,#b5e87d);outline-offset:3px;}"
+    },
+    {
+      "name": "Run tag",
+      "kind": "chip",
+      "refersTo": "run-tag",
+      "description": "Low-emphasis noninteractive run identifier in comparison mode.",
+      "html": "<span class=\"ds-run-tag\">Run A</span>",
+      "css": ".ds-run-tag{display:inline-block;font-family:Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;font-size:9px;text-transform:uppercase;letter-spacing:.5px;padding:4px 6px;background:#26302f;border:1px solid #3d4948;border-radius:3px;color:#c0cfcb}"
+    },
+    {
+      "name": "Selected rank card",
+      "kind": "card",
+      "refersTo": "rank-card",
+      "description": "Rank selection is an outlined surface, with state written beside the rank.",
+      "html": "<article class=\"ds-rank\"><button class=\"ds-rank-heading\"><strong>Rank 0</strong><span>Ready \u00b7 F</span></button><div class=\"ds-rank-meta\"><span>Matrix partition</span><span>Same samples on every rank</span></div><div class=\"ds-rank-bar\"><i></i><i></i></div><p class=\"ds-rank-memory\"><strong>60.0 MiB</strong> resident</p></article>",
+      "css": ".ds-rank{font-family:Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;max-width:360px;background:#1e2526;border:1px solid #9dbd76;border-radius:6px;overflow:hidden;box-shadow:0 0 0 1px #9dbd7615;transition:border-color .12s;color:#e6e9e7}.ds-rank-heading{display:flex;gap:7px;width:100%;align-items:center;padding:12px 12px 6px;border:0;border-radius:0;background:transparent;color:inherit;cursor:pointer}.ds-rank-heading strong{font-size:11px;font-weight:600}.ds-rank-heading>span{margin-left:auto;font-size:8px;color:#9aa8ac}.ds-rank-heading:hover{background:#2a3334}.ds-rank-heading:focus-visible{outline:2px solid var(--lime,#b5e87d);outline-offset:3px;outline-offset:-3px}.ds-rank-meta{display:flex;justify-content:space-between;gap:5px;margin:2px 12px 11px;font-size:8px;line-height:1.4;color:#9aabad}.ds-rank-meta>span:first-child{color:#b2c7c5}.ds-rank-bar{display:flex;height:5px;margin:15px 12px 9px}.ds-rank-bar>i:first-child{width:33.33%;background:var(--cyan,#82c8d4)}.ds-rank-bar>i:last-child{flex:1;background:var(--purple,#b7a0dc)}.ds-rank-memory{font-size:9px;color:#9aa8ac;margin:0 12px 12px}.ds-rank-memory strong{color:#e6e9e7}@media(prefers-reduced-motion:reduce){.ds-rank{transition:none}}"
+    },
+    {
+      "name": "Five-way strategy selector",
+      "kind": "custom",
+      "refersTo": "strategy-selected",
+      "description": "One shared segmented control across DDP, FSDP, TP, PP, and EP.",
+      "html": "<div class=\"ds-strategies\" role=\"group\" aria-label=\"Strategy\"><button aria-pressed=\"false\">DDP</button><button aria-pressed=\"false\">FSDP</button><button class=\"ds-selected\" aria-pressed=\"true\">TP</button><button aria-pressed=\"false\">PP</button><button aria-pressed=\"false\">EP</button></div>",
+      "css": ".ds-strategies{display:flex;max-width:560px;height:36px;border:1px solid #445052;border-radius:5px;overflow:hidden;background:#171d1e;font-family:Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif}.ds-strategies button{flex:1;border:0;border-radius:0;padding:8px 9px;background:transparent;color:#e6e9e7;font:inherit;font-size:11px;cursor:pointer}.ds-strategies .ds-selected{color:var(--lime,#b5e87d);background:#2b3826;box-shadow:inset 0 -2px 0 var(--lime,#b5e87d)}.ds-strategies button:hover{background:#2a3334}.ds-strategies button:focus-visible{outline:2px solid var(--lime,#b5e87d);outline-offset:3px;outline-offset:-3px}"
+    },
+    {
+      "name": "Ownership cells",
+      "kind": "custom",
+      "refersTo": "ownership-cell",
+      "description": "Labeled owned and absent cells retain their meaning beyond color.",
+      "html": "<div class=\"ds-ownership\"><strong>Rank 0</strong><div class=\"ds-cells\"><span>L1<small>full</small></span><span>L2<small>full</small></span><span class=\"ds-absent\">L3</span><span class=\"ds-absent\">L4</span></div><small>4 microbatches</small></div>",
+      "css": ".ds-ownership{max-width:300px;font-family:Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;color:#e6e9e7}.ds-ownership>strong{display:block;margin-bottom:6px;font-size:11px;font-weight:550}.ds-ownership>small{display:block;margin-top:6px;color:var(--muted,#93a2a7);font-size:10px}.ds-cells{display:flex;gap:3px}.ds-cells>span{flex:1;min-width:0;padding:7px 3px;text-align:center;font-size:10px;border:1px solid #4c6240;background:#253020;border-radius:3px;color:#cce6b6}.ds-cells small{display:block;font-size:9px;margin-top:2px}.ds-cells .ds-absent{color:#839295;border-color:#30393b;background:transparent}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Inspectable Training Console",
+    "overview": "This is a description of the built interface: a dark, compact scientific console in the existing NCCL-compatible visual world. Quiet surfaces make ownership, execution state, and memory changes the prominent content. The system extends one shared workspace across DDP, FSDP, TP, PP, and EP; it does not establish a separate identity for each strategy.\n\nThe interface is precise and explanatory. English labels, tabular numbers, small diagrams, and coordinated inspection connect the same training step across several views. Lime marks interaction and readiness, while muted categorical accents describe data and operations. Preserve the distinction between browser-modeled time and measured performance in metric labels and explanatory copy.",
+    "keyCharacteristics": [
+      "Persistent desktop navigation and a dense, inspectable main workspace.",
+      "Shared controls and visual grammar across five training strategies.",
+      "Tonal panels, thin borders, restrained corners, and compact line icons.",
+      "Explicit ownership labels alongside color and partition geometry.",
+      "Coordinated rank, tensor, event, timeline, and memory selection."
+    ],
+    "rules": [
+      {
+        "name": "The Labeled Color Rule",
+        "body": "Keep labels, abbreviated operation names, legends, and ownership text beside color. A hue alone never explains whether a tensor is owned, an operation is running, or memory belongs to a category.",
+        "section": "colors"
+      }
+    ],
+    "dos": [
+      "**Do** extend the existing charcoal, lime, and categorical-color system across all five strategies.",
+      "**Do** preserve explicit ownership, workload, batch, rank, and operation labels beside diagrams.",
+      "**Do** keep the comparison select available alongside the scrollable preset cards.",
+      "**Do** coordinate focus across rank cards, tensor controls, the timeline, and the event and memory inspectors.",
+      "**Do** retain keyboard focus, playback shortcuts, reduced-motion behavior, and the mobile drawer.",
+      "**Do** label timing as modeled and keep browser-only educational limitations visible where results are interpreted."
+    ],
+    "donts": [
+      "**Don't** assign a separate visual identity or shell to TP, PP, or EP.",
+      "**Don't** rely on color alone to communicate ownership, operation state, or memory category.",
+      "**Don't** imply the timeline measures GPU throughput or physical network execution.",
+      "**Don't** compress the wide execution timeline into unreadable mobile bars; preserve its contained horizontal scrolling.",
+      "**Don't** turn sidecar preview tonal ramps into new application colors without an implementation decision."
+    ]
+  }
+}
