@@ -1,0 +1,665 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font-size",
+        "value": "18px",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:46.267Z",
+        "reason": "Agent: incumbent console type size at src/styles.css:151 (h2, .compact .flow-end, .brand strong), preserved from HEAD or reused by ZeRO. DESIGN.md Typography describes responsive headings and dense control/chart labels beyond its abbreviated frontmatter ramp; no new type scale is introduced."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "10px",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:46.307Z",
+        "reason": "Agent: incumbent console type size at src/styles.css:176 (.micro, .text-button, .sidebar-strategies small), preserved from HEAD or reused by ZeRO. DESIGN.md Typography describes responsive headings and dense control/chart labels beyond its abbreviated frontmatter ramp; no new type scale is introduced."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#f4ac99",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:46.348Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:185 (.error-text); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "21px",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:46.388Z",
+        "reason": "Agent: incumbent console type size at src/styles.css:264 (.brand strong, .metrics strong, .compact .metrics strong), preserved from HEAD or reused by ZeRO. DESIGN.md Typography describes responsive headings and dense control/chart labels beyond its abbreviated frontmatter ramp; no new type scale is introduced."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "9px",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:46.427Z",
+        "reason": "Agent: incumbent console type size at src/styles.css:304 (.workspace-label small, .sidebar-section-label, .sidebar-bottom small), preserved from HEAD or reused by ZeRO. DESIGN.md Typography describes responsive headings and dense control/chart labels beyond its abbreviated frontmatter ramp; no new type scale is introduced."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "12px",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:46.467Z",
+        "reason": "Agent: incumbent console type size at src/styles.css:353 (.sidebar-strategies > button > span:not(.status-dot), .page-heading p, .comparison-note strong), preserved from HEAD or reused by ZeRO. DESIGN.md Typography describes responsive headings and dense control/chart labels beyond its abbreviated frontmatter ramp; no new type scale is introduced."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#b5c69e",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:46.505Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:671 (.comparison-note div > span); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "17px",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:46.547Z",
+        "reason": "Agent: incumbent console type size at src/styles.css:778 (.run-heading h2, .operation-times strong, .modal-heading > h2), preserved from HEAD or reused by ZeRO. DESIGN.md Typography describes responsive headings and dense control/chart labels beyond its abbreviated frontmatter ramp; no new type scale is introduced."
+      },
+      {
+        "rule": "design-system-font",
+        "value": "georgia",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:46.582Z",
+        "reason": "Agent: DESIGN.md Typography explicitly reserves Georgia for model-flow input/output mathematical notation; .flow-end is that documented glyph, unchanged from HEAD."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "22px",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:46.619Z",
+        "reason": "Agent: incumbent console type size at src/styles.css:883 (.flow-end), preserved from HEAD or reused by ZeRO. DESIGN.md Typography describes responsive headings and dense control/chart labels beyond its abbreviated frontmatter ramp; no new type scale is introduced."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#332a23",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:46.658Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:955 (.layer-node.backward-active); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#66737f28",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:46.694Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:967 (.ranks-section); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "8px",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:46.733Z",
+        "reason": "Agent: incumbent console type size at src/styles.css:1014 (.rank-state, .rank-meta, .tensor-block > div:first-child > span), preserved from HEAD or reused by ZeRO. DESIGN.md Typography describes responsive headings and dense control/chart labels beyond its abbreviated frontmatter ramp; no new type scale is introduced."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#3d555c",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:46.771Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:1047 (.tensor-block); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#a9d5dc",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:46.812Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:1050 (.tensor-block); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#2c3b3f",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:46.850Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:1054 (.tensor-block:hover:not(:disabled)); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#b0c5c8",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:46.888Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:1075 (.tensor-block > small); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "1px",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:46.928Z",
+        "reason": "Agent: preserved HEAD 1px radius for internal tensor/shard stripes at src/styles.css:1090 (.shard-stripes > i, .allocation-row i); DESIGN.md Shapes describes compact tensor geometry. This rule compares internal stripes against container radius tokens."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "7px",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:46.965Z",
+        "reason": "Agent: incumbent console type size at src/styles.css:1101 (.buffer-flags, .compact .rank-state, .compact .tensor-block > small), preserved from HEAD or reused by ZeRO. DESIGN.md Typography describes responsive headings and dense control/chart labels beyond its abbreviated frontmatter ramp; no new type scale is introduced."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#f2b6a3",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:47.002Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:1194 (.oom-banner); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#4d3027",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:47.040Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:1195 (.oom-banner); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#87533e",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:47.076Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:1196 (.oom-banner); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "15px",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:47.113Z",
+        "reason": "Agent: incumbent console type size at src/styles.css:1251 (.empty-inspector > h3, .operation-details > h3), preserved from HEAD or reused by ZeRO. DESIGN.md Typography describes responsive headings and dense control/chart labels beyond its abbreviated frontmatter ramp; no new type scale is introduced."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#bfd4a9",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:47.150Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:1266 (.suggested-event); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#cdaa74",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:47.188Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:1381 (.wait-dot); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#d3e5ca",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:47.229Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:1554 (.focused-lane .lane-label); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#edffd0",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:47.269Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:1592 (.timeline-event.selected); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#f0ffec99",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:47.310Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:1599 (.timeline-event.executing); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#24444c",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:47.347Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:1605 (.kind-forward); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#a9dbe4",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:47.384Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:1606 (.kind-forward); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#513e2d",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:47.425Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:1609 (.kind-backward); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#efd0ae",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:47.467Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:1610 (.kind-backward); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#3f3654",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:47.504Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:1613 (.kind-adam); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#d8c4ee",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:47.545Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:1614 (.kind-adam); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#d2eab5",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:47.585Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:1618 (.kind-all-gather); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#3b4c2b",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:47.625Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:1621 (.kind-all-reduce, .kind-reduce-scatter); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#cbe7a9",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:47.665Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:1622 (.kind-all-reduce, .kind-reduce-scatter); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#e1edc4",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:47.703Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:1642 (.time-cursor, .time-cursor:before); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#eea28b",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:47.744Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:1713 (.capacity-line); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#eeffdc",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:47.781Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:1718 (.chart-cursor); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#c5d9b3",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:47.820Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:1798 (.selected-rank-label); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "19px",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:47.861Z",
+        "reason": "Agent: incumbent console type size at src/styles.css:1865 (.compact .metrics strong, .brand strong), preserved from HEAD or reused by ZeRO. DESIGN.md Typography describes responsive headings and dense control/chart labels beyond its abbreviated frontmatter ramp; no new type scale is introduced."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#cbe9b4",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:47.898Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:2036 (.notice); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#87513e",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:47.935Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:2044 (.notice.error); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#f1b39e",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:47.972Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:2045 (.notice.error); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#34221d",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:48.009Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:2046 (.notice.error); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "26px",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:48.046Z",
+        "reason": "Agent: incumbent console type size at src/styles.css:2430 (.page-heading h1), preserved from HEAD or reused by ZeRO. DESIGN.md Typography describes responsive headings and dense control/chart labels beyond its abbreviated frontmatter ramp; no new type scale is introduced."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#0009",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:48.084Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/styles.css:2627 (.nav-backdrop); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "25px",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:48.123Z",
+        "reason": "Agent: incumbent console type size at src/styles.css:2656 (.page-heading h1), preserved from HEAD or reused by ZeRO. DESIGN.md Typography describes responsive headings and dense control/chart labels beyond its abbreviated frontmatter ramp; no new type scale is introduced."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "16px",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:48.161Z",
+        "reason": "Agent: incumbent console type size at src/styles.css:2792 (.run-heading h2, .modal-heading > h2), preserved from HEAD or reused by ZeRO. DESIGN.md Typography describes responsive headings and dense control/chart labels beyond its abbreviated frontmatter ramp; no new type scale is introduced."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "20px",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:48.202Z",
+        "reason": "Agent: incumbent console type size at src/styles.css:2811 (.metrics strong, .compact .metrics strong), preserved from HEAD or reused by ZeRO. DESIGN.md Typography describes responsive headings and dense control/chart labels beyond its abbreviated frontmatter ramp; no new type scale is introduced."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "6px",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:48.243Z",
+        "reason": "Agent: incumbent console type size at src/styles.css:2897 (.buffer-flags, .compact .buffer-flags), preserved from HEAD or reused by ZeRO. DESIGN.md Typography describes responsive headings and dense control/chart labels beyond its abbreviated frontmatter ramp; no new type scale is introduced."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "14px",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:39:48.281Z",
+        "reason": "Agent: incumbent console type size at src/styles.css:2936 (.empty-inspector > h3), preserved from HEAD or reused by ZeRO. DESIGN.md Typography describes responsive headings and dense control/chart labels beyond its abbreviated frontmatter ramp; no new type scale is introduced."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "10px",
+        "files": [
+          "src/parallel.css"
+        ],
+        "createdAt": "2026-10-28T02:39:48.319Z",
+        "reason": "Agent: incumbent console type size at src/parallel.css:85 (.partition-rank > small, .partition-cells > span, .zero-summary thead th), preserved from HEAD or reused by ZeRO. DESIGN.md Typography describes responsive headings and dense control/chart labels beyond its abbreviated frontmatter ramp; no new type scale is introduced."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#cce6b6",
+        "files": [
+          "src/parallel.css"
+        ],
+        "createdAt": "2026-10-28T02:39:48.353Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/parallel.css:102 (.partition-cells > span); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "9px",
+        "files": [
+          "src/parallel.css"
+        ],
+        "createdAt": "2026-10-28T02:39:48.390Z",
+        "reason": "Agent: incumbent console type size at src/parallel.css:106 (.partition-cells small, .zero-run-markers > span), preserved from HEAD or reused by ZeRO. DESIGN.md Typography describes responsive headings and dense control/chart labels beyond its abbreviated frontmatter ramp; no new type scale is introduced."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#46646c",
+        "files": [
+          "src/parallel.css"
+        ],
+        "createdAt": "2026-10-28T02:39:48.431Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/parallel.css:116 (.partition-cells.tp .partition-owned); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#b5dce3",
+        "files": [
+          "src/parallel.css"
+        ],
+        "createdAt": "2026-10-28T02:39:48.472Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/parallel.css:117 (.partition-cells.tp .partition-owned); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#3b3024",
+        "files": [
+          "src/parallel.css"
+        ],
+        "createdAt": "2026-10-28T02:39:48.510Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/parallel.css:120 (.partition-cells.pp .partition-owned); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#786248",
+        "files": [
+          "src/parallel.css"
+        ],
+        "createdAt": "2026-10-28T02:39:48.548Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/parallel.css:121 (.partition-cells.pp .partition-owned); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#ebc6a3",
+        "files": [
+          "src/parallel.css"
+        ],
+        "createdAt": "2026-10-28T02:39:48.585Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/parallel.css:122 (.partition-cells.pp .partition-owned); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#382b3c",
+        "files": [
+          "src/parallel.css"
+        ],
+        "createdAt": "2026-10-28T02:39:48.622Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/parallel.css:129 (.partition-cells.ep .partition-owned); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#715a78",
+        "files": [
+          "src/parallel.css"
+        ],
+        "createdAt": "2026-10-28T02:39:48.660Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/parallel.css:130 (.partition-cells.ep .partition-owned); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#dec3e3",
+        "files": [
+          "src/parallel.css"
+        ],
+        "createdAt": "2026-10-28T02:39:48.697Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/parallel.css:131 (.partition-cells.ep .partition-owned); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#3f3d26",
+        "files": [
+          "src/parallel.css"
+        ],
+        "createdAt": "2026-10-28T02:39:48.737Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/parallel.css:156 (.kind-send-recv); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#e8dfa8",
+        "files": [
+          "src/parallel.css"
+        ],
+        "createdAt": "2026-10-28T02:39:48.774Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/parallel.css:157 (.kind-send-recv); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#423144",
+        "files": [
+          "src/parallel.css"
+        ],
+        "createdAt": "2026-10-28T02:39:48.811Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/parallel.css:160 (.kind-all-to-all); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#e3b9df",
+        "files": [
+          "src/parallel.css"
+        ],
+        "createdAt": "2026-10-28T02:39:48.849Z",
+        "reason": "Agent: preserved HEAD scientific-category/status palette at src/parallel.css:161 (.kind-all-to-all); DESIGN.md Colors requires incumbent NCCL-compatible surfaces and distinct labeled training categories. This value is not a new ZeRO palette change."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "22px",
+        "files": [
+          "src/parallel.css"
+        ],
+        "createdAt": "2026-10-28T02:39:48.886Z",
+        "reason": "Agent: incumbent console type size at src/parallel.css:220 (.strategy-explanation h2), preserved from HEAD or reused by ZeRO. DESIGN.md Typography describes responsive headings and dense control/chart labels beyond its abbreviated frontmatter ramp; no new type scale is introduced."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "12px",
+        "files": [
+          "src/parallel.css"
+        ],
+        "createdAt": "2026-10-28T02:39:48.923Z",
+        "reason": "Agent: incumbent console type size at src/parallel.css:306 (.zero-profile-breakdown, .zero-summary), preserved from HEAD or reused by ZeRO. DESIGN.md Typography describes responsive headings and dense control/chart labels beyond its abbreviated frontmatter ramp; no new type scale is introduced."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "14px",
+        "files": [
+          "src/parallel.css"
+        ],
+        "createdAt": "2026-10-28T02:39:48.963Z",
+        "reason": "Agent: incumbent console type size at src/parallel.css:325 (.zero-summary-heading h2), preserved from HEAD or reused by ZeRO. DESIGN.md Typography describes responsive headings and dense control/chart labels beyond its abbreviated frontmatter ramp; no new type scale is introduced."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#becabb",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:40:41.461Z",
+        "reason": "Agent: preserved HEAD text tint at .comparison-note p in src/styles.css:666; restoring current NCCL sidecar ramps removed an accidental stale-ramp match. Existing comparison/modal semantics and user-approved console palette remain unchanged."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#c4d3ba",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-28T02:40:41.502Z",
+        "reason": "Agent: preserved HEAD text tint at .modal legend in src/styles.css:2111; restoring current NCCL sidecar ramps removed an accidental stale-ramp match. Existing comparison/modal semantics and user-approved console palette remain unchanged."
+      }
+    ]
+  }
+}
